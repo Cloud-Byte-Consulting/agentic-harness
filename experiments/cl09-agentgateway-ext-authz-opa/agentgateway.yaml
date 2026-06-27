@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+# Route with extAuthz -> OPA-Envoy gRPC (:9191). On allow, forward to the HTTP backend.
+# NOTE: standalone extAuthz target/backend shape may need a tweak vs the K8s CRD form —
+# iterate against the binary's startup validation (docker compose logs agentgateway).
+binds:
+- port: 3000
+  listeners:
+  - routes:
+    - policies:
+        extAuthz:
+          host: opa:9191
+          failureMode: deny
+          includeRequestBody:
+            maxRequestBytes: 8192
+            allowPartialMessage: true
+      backends:
+      - host: backend:5678
