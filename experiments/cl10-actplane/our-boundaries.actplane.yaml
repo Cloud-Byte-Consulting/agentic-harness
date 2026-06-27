@@ -1,0 +1,28 @@
+version: 1
+# OUR OE boundaries expressed in ActPlane DSL (CLO-10 / E3). Adapted from the repo's
+# test/policies/*.yaml. Enforced at the SYSCALL layer over the agent's exec lineage,
+# so a denied action reached via a script/subprocess is caught — the gap our tool-call
+# hooks (opa_delegate / opa-hook) miss. Validate:  actplane --policy this.yaml compile
+policy: |
+  # Our harnesses. Rules apply to their fork/exec descendants.
+  source AGENT = exec "**/claude"
+  source AGENT = exec "**/codex"
+  source AGENT = exec "**/pi"
+
+  # .env / secrets must not leave the box (mirrors mcp-policies tenant-data secrecy).
+  source SECRET = file "**/.env"
+  rule no-secret-exfil:
+    block connect endpoint "*" if SECRET
+    because ".env contents must not reach the network"
+
+  # tests-before-commit — an OE boundary the OPA tool-call hooks CANNOT express
+  # (temporal: commit only after a passing test since the last source edit).
+  rule tests-before-commit:
+    kill exec "git" "commit"
+      if AGENT unless after exec "**/pytest" exits 0 since write "**/*.py"
+    because "tests are stale — run pytest, then commit"
+
+  # workspace confinement — destructive file mutation stays inside the workspace.
+  rule workspace-confinement:
+    block unlink file "/**" if AGENT unless target "/home/*/air/workspace/**"
+    because "agent file deletion is confined to the workspace"
