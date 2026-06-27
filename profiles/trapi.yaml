@@ -1,0 +1,27 @@
+# Saved team profile — TRAPI (Azure APIM / .NET services team).
+# `air install --profile trapi` resolves this.
+team:
+  name: trapi
+  shape: inverted-pyramid
+  operatingModel: B                # small embedded pod; no shared platform yet
+  pods: 3
+
+economics:
+  defaultWorld: compose
+  perWorkflow:
+    api-policy-change: compose
+    cspm-remediation: use
+
+talent:
+  personas: [software-engineer, devops-engineer]
+  hireFor: [curiosity, first-principles, customer-focus, collaborativeness]
+
+governance:
+  agentIdentity: required
+  policyEnforcement: gateway
+  tiers: { write: tier2_elevated, production: tier3_high_exposure }
+  audit: enabled
+
+pipeline:
+  learningMode: hourglass
+  reviewLoop: required

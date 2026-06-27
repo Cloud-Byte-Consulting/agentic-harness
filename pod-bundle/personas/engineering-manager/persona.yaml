@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the EM role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: engineering-manager
+role: EM
+name: "Engineering Manager"
+pod: ./pod.md
+skills:
+  shared: [planning-and-task-breakdown, co-operating-model, technical-program-management, documentation-and-adrs]
+  router: []
+  add: [delivery-metrics, one-on-one-prep, hiring-loop]   # net-new, author under pod-bundle/skills/
+sources: [delivery-metrics, team-docs, pr-throughput, incident-counts]
+workflows: [team-health-review, sprint-planning, growth-planning, hiring]
+defaultMutationTier: tier1_low
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

@@ -1,0 +1,18 @@
+team:
+  name: cordillera
+  shape: inverted-pyramid
+  operatingModel: C
+  pods: 12
+economics:
+  defaultWorld: compose
+talent:
+  personas: [site-reliability-engineer, devops-engineer]
+  hireFor: [curiosity, first-principles]
+governance:
+  agentIdentity: required
+  policyEnforcement: gateway
+  tiers: { write: tier2_elevated, production: tier3_high_exposure }
+  audit: enabled
+pipeline:
+  learningMode: hourglass
+  reviewLoop: required

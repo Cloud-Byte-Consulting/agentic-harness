@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the SRE role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: site-reliability-engineer
+role: SRE
+name: "Site Reliability Engineer"
+pod: ./pod.md
+skills:
+  shared: [security-operations-mitre-attack, evidence-grounded-investigation]
+  router: [cordillera]
+  add: [incident-response, slo-management, runbook-authoring]   # net-new, author under pod-bundle/skills/
+sources: [metrics, logs, alerts, dashboards, runbooks]
+workflows: [incident-triage, slo-review, postmortem, capacity-planning]
+defaultMutationTier: tier3_high_exposure
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

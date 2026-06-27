@@ -1,0 +1,37 @@
+name: Mirror from GitHub
+# Non-destructive downstream sync: GitHub (Cloud-Byte-Consulting) is source of truth;
+# fast-forwards refs/heads + refs/tags into Gitea (triggering Gitea Actions/packages),
+# leaving issues/packages/releases/PR-refs intact. Set secret GITEA_SYNC_TOKEN
+# (Gitea org write). Must live on the default branch. Don't commit on Gitea once live.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+jobs:
+  mirror:
+    name: GitHub -> Gitea
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Sync all repos
+        env:
+          GITEA_BASE: ${{ github.server_url }}
+          GITEA_TOKEN: ${{ secrets.GITEA_SYNC_TOKEN }}
+          GH_ORG: Cloud-Byte-Consulting
+        run: |
+          set -u
+          REPOS="agentic-harness Agentic-Resource-Discovery Agentic-Sentry Cachy copilot-role-router teo token-dashboard"
+          case "$GITEA_BASE" in
+            https://*) host="${GITEA_BASE#https://}"; scheme=https ;;
+            *)         host="${GITEA_BASE#http://}";  scheme=http  ;;
+          esac
+          rc=0
+          for r in $REPOS; do
+            src="https://github.com/${GH_ORG}/${r}.git"
+            git ls-remote "$src" >/dev/null 2>&1 || { echo "skip ${r}: not on GitHub yet"; continue; }
+            rm -rf "/tmp/${r}.git"
+            git clone --quiet --bare "$src" "/tmp/${r}.git" || { echo "clone failed: ${r}"; rc=1; continue; }
+            dst="${scheme}://oauth2:${GITEA_TOKEN}@${host}/${GH_ORG}/${r}.git"
+            git -C "/tmp/${r}.git" push --quiet "$dst" "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" \
+              && echo "synced ${r}" || { echo "push failed: ${r}"; rc=1; }
+          done
+          exit $rc

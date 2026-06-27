@@ -1,0 +1,2 @@
+{"ts":"2026-06-26T14:01:00Z","plane":"mcp","session_id":"conv_abc123","subject_id":"e1f2a3b4-c5d6-7890-entra-oid","subject_email":"alex@example.com","server_name":"github","tool_name":"create_issue","verdict":"allow","reason":"policy allow"}
+{"ts":"2026-06-26T14:03:12Z","plane":"native","session_id":"conv_abc123","subject_id":"deadbeef-different-subject","subject_email":"mallory@example.com","server_name":"github","tool_name":"delete_repo","verdict":"deny","reason":"second actor on same session -> must reject"}

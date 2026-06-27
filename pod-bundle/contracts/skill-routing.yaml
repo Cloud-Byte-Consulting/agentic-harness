@@ -1,0 +1,279 @@
+# skill-routing.yaml
+#
+# Machine-readable registry for the imported Claude/Copilot CONTENT skills:
+#   skill -> owning router -> roles that load it -> implied mutation-gate tier.
+#
+# This is the source of truth for selective ("don't load k8s for UI work") skill
+# loading. It is consumed conceptually by scripts/co-dispatch.ps1 (recommendedSkills)
+# and documented in knowledge-base/41-skill-routing-architecture.md.
+#
+# IMPORTANT: loading a skill = read-only knowledge. ACTING on a skill's mutating
+# procedure still passes /mutation-gate (agents/20-mutation-gate.md). The gateTier
+# below is the tier a skill's *write actions* imply, not permission to write.
+#
+# routers:    trapi-router | cordillera-router | shared
+# roles:      recon (read-only) | medic | engineer | qa | judge | scribe | code-review
+# gateTier:   tier1_low | tier2_elevated | tier3_high_exposure
+# location:   where the governed copy lives in this repo
+#   - router-skills/cordillera/<name>  (PR-staged into ../cordillera-agent-system)
+#   - router-skills/trapi/<name>       (PR-staged into ../trapi-agent-system)
+#   - skills/<name>                    (canonical shared skill; tool views via `air skills link|sync`)
+
+version: 2
+updated: 2026-06-21
+
+defaults:
+  load_rule: >-
+    A skill is in scope only when (1) Tier-1 ownership routing selects its router
+    for the task, AND (2) the skill's own description frontmatter matches the task.
+  gate_rule: >-
+    gateTier governs ACTIONS, not knowledge. Read/loading is always allowed;
+    writes implied by the skill route through /mutation-gate first.
+
+routers:
+
+  cordillera-router:
+    owns: Bonete Grande/Chico, Kubernetes, Grafana, GitHub feature governance, data platforms on K8s
+    stage: router-skills/cordillera
+    promote_to: ../cordillera-agent-system/.claude/skills
+    skills:
+      - name: container-fundamentals
+        roles: [recon, engineer, medic]
+        gateTier: tier2_elevated
+      - name: kubernetes-workloads
+        roles: [recon, engineer, medic]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-networking
+        roles: [recon, engineer, medic]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-storage
+        roles: [recon, engineer, medic]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-security-rbac
+        roles: [recon, engineer, qa]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-autoscaling-scheduling
+        roles: [recon, engineer, medic]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-cluster-operations
+        roles: [recon, medic, engineer]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-gitops-cicd
+        roles: [recon, engineer]
+        gateTier: tier3_high_exposure
+      - name: kubernetes-observability
+        roles: [recon, qa]
+        gateTier: tier2_elevated
+      - name: kubernetes-data-platforms
+        roles: [recon, engineer]
+        gateTier: tier3_high_exposure
+      - name: cloud-native-platform-engineering
+        roles: [recon, engineer]
+        gateTier: tier2_elevated
+      - name: volcano-core-scheduling
+        roles: [recon, engineer]
+        gateTier: tier3_high_exposure
+      - name: volcano-advanced-hardware
+        roles: [recon, engineer]
+        gateTier: tier3_high_exposure
+      - name: volcano-ecosystem-workflows
+        roles: [recon, engineer]
+        gateTier: tier2_elevated
+      - name: volcano-genai-serving
+        roles: [recon, engineer]
+        gateTier: tier3_high_exposure
+
+  trapi-router:
+    owns: APIM, TMDS, Batch, Azure infra, ADO pipelines, ASP.NET Web APIs (trapi-snapshot, batch)
+    stage: router-skills/trapi
+    promote_to: ../trapi-agent-system/.claude/skills
+    skills:
+      - name: api-management
+        roles: [recon, engineer, qa]
+        gateTier: tier3_high_exposure   # APIM policy publish = prod
+      - name: cloud-security-posture-management
+        roles: [recon, qa]
+        gateTier: tier3_high_exposure   # posture read = ok; remediation = prod
+      - name: dotnet-web-development
+        roles: [engineer, medic, qa]
+        gateTier: tier2_elevated
+      - name: csharp-dotnet-fundamentals
+        roles: [engineer, medic]
+        gateTier: tier2_elevated
+      - name: dotnet-enterprise-architecture
+        roles: [engineer, recon]
+        gateTier: tier2_elevated
+
+  shared:
+    owns: cross-cutting expertise loaded regardless of owning domain
+    location: skills          # canonical; tool views via `air skills link|sync`
+    skills:
+      - name: powershell-scripting
+        roles: [engineer, medic, qa, scribe]
+        gateTier: tier2_elevated
+      - name: solutions-architecture
+        roles: [recon, engineer]
+        gateTier: tier1_low
+      - name: building-ai-agents
+        roles: [engineer, recon]
+        gateTier: tier1_low
+      - name: llm-agent-orchestration
+        roles: [engineer, recon]
+        gateTier: tier1_low
+      - name: clean-code-typescript
+        roles: [engineer, medic, code-review]
+        gateTier: tier2_elevated
+      - name: security-operations-mitre-attack
+        roles: [recon, qa]
+        gateTier: tier3_high_exposure   # review read-only; remediation = prod
+      - name: technical-program-management
+        roles: [recon, scribe]
+        gateTier: tier1_low
+        note: pre-existing in this repo (from chief-of-staff); Skillaz copy not re-added
+      # Present on disk under .claude/skills but previously unregistered — added 2026-06-21.
+      - name: test-driven-development
+        roles: [engineer, qa]
+        gateTier: tier2_elevated
+      - name: code-review-and-quality
+        roles: [code-review, qa, engineer]
+        gateTier: tier2_elevated
+      - name: documentation-and-adrs
+        roles: [scribe, engineer, recon]
+        gateTier: tier1_low
+      - name: planning-and-task-breakdown
+        roles: [recon, engineer, scribe]
+        gateTier: tier1_low
+      - name: evidence-grounded-investigation
+        roles: [recon, qa, medic]
+        gateTier: tier1_low
+      - name: co-operating-model
+        roles: [recon, scribe]
+        gateTier: tier1_low
+      - name: frontend-ui-engineering
+        roles: [engineer, code-review]
+        gateTier: tier2_elevated
+      - name: idea-refine
+        roles: [recon, scribe]
+        gateTier: tier1_low
+      # Meta-skills (routing wrappers + the gate itself) — load mechanics, not domain content.
+      - name: mutation-gate
+        roles: [recon, engineer, qa, judge]
+        gateTier: tier1_low
+        note: the gate procedure itself; loading is read-only
+
+# Skills installed to the personal profile (~/.claude/skills) but NOT distributed to
+# any governed router set. Available to the user, ungoverned, toggleable via
+# ~/.claude/skills/skill-toggle.ps1.
+personal_only:
+  - windows-security-hardening
+  - linux-security-hardening
+  - rag-and-knowledge-graphs
+  - ai-intensive-python-apps
+  - kratix-platform-engineering
+  - radius-application-platform
+  - score-workload-spec
+
+# How each work-type playbook (rendered in the chief-of-staff Workflows tab) pulls
+# skills. taskType maps to the Omnigent supervisor's dispatcher classes (archived: copilot-role-router).
+work_types:
+  ad_hoc:
+    entry: workiq_signal           # email / Teams
+    order: severity
+    taskType: research
+    default_skills: [technical-program-management]
+    gate: tier2_elevated           # only if it creates/sends something
+  feature:
+    entry: planned_work_item
+    order: priority
+    taskType: feature_implementation
+    default_skills: [solutions-architecture]   # + domain skill via router
+    gate: tier2_elevated
+  bug_fix:
+    entry: bug_item_or_failure
+    order: severity
+    taskType: bug_fix
+    default_skills: []             # domain skill via router
+    gate: tier2_elevated           # tier3 if prod hotfix
+  icm_incident:
+    entry: icm_incident            # NEW cockpit entry source
+    order: severity
+    taskType: bug_fix
+    default_skills: [security-operations-mitre-attack, kubernetes-observability]
+    gate: tier3_high_exposure      # prod, always ESCALATE
+
+# ---------------------------------------------------------------------------
+# Personas (added 2026-06-21). A persona is the Tier-1 selector ABOVE routers:
+# it picks which routers + skills load and the default mutation tier. The
+# editable copy of each lives in pod-bundle/personas/<id>/persona.yaml; this
+# block is the routing-contract view. `planned` skills are referenced by a
+# persona but not yet authored (see planned_skills below).
+# ---------------------------------------------------------------------------
+personas:
+  software-engineer:
+    routers: [shared]
+    skills: [clean-code-typescript, test-driven-development, code-review-and-quality, frontend-ui-engineering, building-ai-agents]
+    default_gate: tier2_elevated
+  technical-program-manager:
+    routers: [shared]
+    skills: [technical-program-management, planning-and-task-breakdown, documentation-and-adrs, co-operating-model, idea-refine]
+    default_gate: tier1_low
+  lead-program-manager:
+    routers: [shared]
+    skills: [technical-program-management, solutions-architecture, planning-and-task-breakdown, documentation-and-adrs]
+    default_gate: tier1_low
+  engineering-manager:
+    routers: [shared]
+    skills: [planning-and-task-breakdown, co-operating-model, technical-program-management, documentation-and-adrs]
+    planned: [delivery-metrics, one-on-one-prep, hiring-loop]
+    default_gate: tier1_low
+  site-reliability-engineer:
+    routers: [shared, cordillera]
+    skills: [security-operations-mitre-attack, evidence-grounded-investigation, kubernetes-observability, kubernetes-cluster-operations, kubernetes-networking, kubernetes-autoscaling-scheduling]
+    planned: [incident-response, slo-management, runbook-authoring]
+    default_gate: tier3_high_exposure
+  devops-engineer:
+    routers: [shared, cordillera, trapi]
+    skills: [powershell-scripting, evidence-grounded-investigation, kubernetes-gitops-cicd, container-fundamentals, cloud-native-platform-engineering, kubernetes-cluster-operations, cloud-security-posture-management]
+    planned: [infrastructure-as-code, ci-cd-pipeline-engineering, release-and-artifact-management]
+    default_gate: tier3_high_exposure
+  data-engineer:
+    routers: [shared, cordillera]
+    skills: [test-driven-development, evidence-grounded-investigation, solutions-architecture, kubernetes-data-platforms, volcano-genai-serving]
+    planned: [data-pipeline-engineering, data-modeling-and-schemas, sql-and-warehousing, data-quality-and-validation]
+    default_gate: tier3_high_exposure
+  business-analyst:
+    routers: [shared]
+    skills: [idea-refine, planning-and-task-breakdown, documentation-and-adrs, co-operating-model, solutions-architecture]
+    planned: [requirements-elicitation, process-modeling, stakeholder-analysis, reporting-and-insights]
+    default_gate: tier1_low
+  cybersecurity-engineer:
+    routers: [shared, trapi, cordillera]
+    skills: [security-operations-mitre-attack, evidence-grounded-investigation, cloud-security-posture-management, kubernetes-security-rbac]
+    planned: [threat-modeling, vulnerability-management, secure-code-review, detection-and-response]
+    default_gate: tier3_high_exposure
+
+# Net-new skills referenced by personas above but not yet authored as SKILL.md.
+# status: planned -> create under pod-bundle/.claude/skills/<name>/SKILL.md, then
+# move into the appropriate router block.
+planned_skills:
+  - { name: incident-response,            owner: site-reliability-engineer, gateTier: tier3_high_exposure }
+  - { name: slo-management,               owner: site-reliability-engineer, gateTier: tier2_elevated }
+  - { name: runbook-authoring,            owner: site-reliability-engineer, gateTier: tier1_low }
+  - { name: infrastructure-as-code,       owner: devops-engineer,           gateTier: tier3_high_exposure }
+  - { name: ci-cd-pipeline-engineering,   owner: devops-engineer,           gateTier: tier3_high_exposure }
+  - { name: release-and-artifact-management, owner: devops-engineer,        gateTier: tier2_elevated }
+  - { name: data-pipeline-engineering,    owner: data-engineer,             gateTier: tier3_high_exposure }
+  - { name: data-modeling-and-schemas,    owner: data-engineer,             gateTier: tier2_elevated }
+  - { name: sql-and-warehousing,          owner: data-engineer,             gateTier: tier2_elevated }
+  - { name: data-quality-and-validation,  owner: data-engineer,             gateTier: tier2_elevated }
+  - { name: threat-modeling,              owner: cybersecurity-engineer,    gateTier: tier1_low }
+  - { name: vulnerability-management,     owner: cybersecurity-engineer,    gateTier: tier3_high_exposure }
+  - { name: secure-code-review,           owner: cybersecurity-engineer,    gateTier: tier2_elevated }
+  - { name: detection-and-response,       owner: cybersecurity-engineer,    gateTier: tier3_high_exposure }
+  - { name: delivery-metrics,             owner: engineering-manager,       gateTier: tier1_low }
+  - { name: one-on-one-prep,              owner: engineering-manager,       gateTier: tier1_low }
+  - { name: hiring-loop,                  owner: engineering-manager,       gateTier: tier1_low }
+  - { name: requirements-elicitation,     owner: business-analyst,          gateTier: tier1_low }
+  - { name: process-modeling,             owner: business-analyst,          gateTier: tier1_low }
+  - { name: stakeholder-analysis,         owner: business-analyst,          gateTier: tier1_low }
+  - { name: reporting-and-insights,       owner: business-analyst,          gateTier: tier1_low }

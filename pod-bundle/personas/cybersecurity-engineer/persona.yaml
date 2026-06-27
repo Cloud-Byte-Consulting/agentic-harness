@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the SecEng role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: cybersecurity-engineer
+role: SecEng
+name: "Cybersecurity Engineer"
+pod: ./pod.md
+skills:
+  shared: [security-operations-mitre-attack, evidence-grounded-investigation]
+  router: [trapi, cordillera]
+  add: [threat-modeling, vulnerability-management, secure-code-review, detection-and-response]   # net-new, author under pod-bundle/skills/
+sources: [siem-alerts, cve-feeds, sast-dast-sca-reports, asset-inventory, audit-logs, threat-intel]
+workflows: [threat-model, vuln-triage, security-review, incident-response, pentest]
+defaultMutationTier: tier3_high_exposure
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

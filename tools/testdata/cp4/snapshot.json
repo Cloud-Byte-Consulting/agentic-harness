@@ -1,0 +1,21 @@
+{
+  "id": "conv_abc123",
+  "agent_id": "ag_alex",
+  "agent_name": "alex-claude",
+  "status": "idle",
+  "created_at": 1782825600,
+  "labels": {
+    "openengine.issue": "github:Cloud-Byte-Consulting/agentic-harness#42",
+    "cost_control.mode": "on"
+  },
+  "items": [
+    {"type": "message", "role": "user", "id": "it_1"},
+    {"type": "message", "role": "assistant", "id": "it_2"},
+    {"type": "tool_call", "id": "it_3"}
+  ],
+  "last_total_tokens": 41200,
+  "total_cost_usd": 0.42,
+  "usage_by_model": {
+    "claude-sonnet-4-6": {"input_tokens": 32000, "output_tokens": 9200}
+  }
+}

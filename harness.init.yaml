@@ -1,0 +1,29 @@
+# AIR Harness — default init profile.
+# This is the single artifact you set when standing up a team. It answers the four
+# questions (economics, talent, structure, governance) from
+# docs/team_structures_and_operating_models.md and resolves which manifest
+# components install, which persona packs load, and the gate posture.
+# Copy to profiles/<team>.yaml to save a team profile (see profiles/cordillera.yaml).
+team:
+  name: default
+  shape: inverted-pyramid          # pyramid | diamond | inverted-pyramid (pod) | hourglass
+  operatingModel: B                # A=migrate (forbidden) | B=embedded | C=B+platform
+  pods: 1                          # >=10 pods → switch to C
+
+economics:
+  defaultWorld: compose            # use | compose | build  (per-workflow overrides below)
+  perWorkflow: {}                  # e.g. { incident-triage: use, context-compression: build }
+
+talent:
+  personas: [software-engineer]    # ids under pod-bundle/personas/
+  hireFor: [curiosity, collaborativeness, customer-focus, first-principles]
+
+governance:
+  agentIdentity: required          # no action without a named, authorized identity
+  policyEnforcement: gateway       # enforced outside the LLM loop
+  tiers: { write: tier2_elevated, production: tier3_high_exposure }
+  audit: enabled
+
+pipeline:
+  learningMode: hourglass          # keep juniors in the loop (counter the deskilling trap)
+  reviewLoop: required             # verification tax → mandatory QA/Judge pass

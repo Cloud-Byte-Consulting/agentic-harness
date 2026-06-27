@@ -1,0 +1,12 @@
+id: software-engineer
+role: SWE
+name: "Software Engineer"
+pod: ./pod.md
+skills:
+  shared: [clean-code-typescript, test-driven-development]
+  router: []
+  add: []
+sources: [repo, git, tests, ci]
+workflows: [feature, bug-fix, refactor]
+defaultMutationTier: tier2_elevated
+surfaces: [role-router, cachy, token-dashboard]

@@ -1,0 +1,27 @@
+# Saved team profile — Cordillera (Kubernetes / cloud-native platform team).
+# `air install --profile cordillera` resolves this.
+team:
+  name: cordillera
+  shape: inverted-pyramid
+  operatingModel: C                # platform team at scale → pods + shared platform
+  pods: 12
+
+economics:
+  defaultWorld: compose
+  perWorkflow:
+    incident-triage: use
+    cluster-autoscaling: compose
+
+talent:
+  personas: [site-reliability-engineer, devops-engineer, data-engineer]
+  hireFor: [curiosity, first-principles, customer-focus, collaborativeness]
+
+governance:
+  agentIdentity: required
+  policyEnforcement: gateway
+  tiers: { write: tier2_elevated, production: tier3_high_exposure }
+  audit: enabled
+
+pipeline:
+  learningMode: hourglass
+  reviewLoop: required

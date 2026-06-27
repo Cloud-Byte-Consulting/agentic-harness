@@ -1,0 +1,7 @@
+# Named harness target sets — pass to any `air … --harness <name>` (or comma-list
+# of harness names). Built-in sets: all, popular, skills. Define your own below.
+# Example:  air bootstrap --harness frontend   ·   air agents link --harness review
+sets:
+  frontend: [claude, copilot, cursor]
+  review:   [claude, cursor]
+  ci:       [copilot]
