@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the TPM role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: technical-program-manager
+role: TPM
+name: "Technical Program Manager"
+pod: ./pod.md
+skills:
+  shared: [technical-program-management, planning-and-task-breakdown, documentation-and-adrs, co-operating-model, idea-refine]
+  router: []
+  add: []
+sources: [tickets, roadmaps, status-docs, issue-tracker]
+workflows: [program-sync, dependency-map, risk-review, status-rollup]
+defaultMutationTier: tier1_low
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

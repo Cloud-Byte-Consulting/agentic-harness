@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the BA role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: business-analyst
+role: BA
+name: "Business Analyst"
+pod: ./pod.md
+skills:
+  shared: [idea-refine, planning-and-task-breakdown, documentation-and-adrs, co-operating-model, solutions-architecture]
+  router: []
+  add: [requirements-elicitation, process-modeling, stakeholder-analysis, reporting-and-insights]   # net-new, author under pod-bundle/skills/
+sources: [requirements-docs, stakeholder-interviews, tickets, bi-reports, process-maps]
+workflows: [requirements-gathering, process-mapping, gap-analysis, report-definition]
+defaultMutationTier: tier1_low
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

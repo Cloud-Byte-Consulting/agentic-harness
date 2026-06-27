@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the SWE role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: software-engineer
+role: SWE
+name: "Software Engineer"
+pod: ./pod.md
+skills:
+  shared: [clean-code-typescript, test-driven-development, code-review-and-quality, frontend-ui-engineering, building-ai-agents]
+  router: []
+  add: []
+sources: [repo, git, tests, ci]
+workflows: [feature, bug-fix, refactor]
+defaultMutationTier: tier2_elevated
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the DataEng role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: data-engineer
+role: DataEng
+name: "Data Engineer"
+pod: ./pod.md
+skills:
+  shared: [test-driven-development, evidence-grounded-investigation, solutions-architecture]
+  router: [team-alpha]
+  add: [data-pipeline-engineering, data-modeling-and-schemas, sql-and-warehousing, data-quality-and-validation]   # net-new, author under pod-bundle/skills/
+sources: [data-catalogs, schemas, pipeline-dags, warehouse-logs, dq-reports]
+workflows: [pipeline-build, schema-migration, data-quality-check, backfill]
+defaultMutationTier: tier3_high_exposure
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

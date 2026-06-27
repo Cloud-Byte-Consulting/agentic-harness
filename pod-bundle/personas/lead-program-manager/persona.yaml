@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the LPM role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: lead-program-manager
+role: LPM
+name: "Lead Program Manager"
+pod: ./pod.md
+skills:
+  shared: [technical-program-management, solutions-architecture, planning-and-task-breakdown, documentation-and-adrs]
+  router: []
+  add: []
+sources: [portfolio-dashboards, okrs, multi-program-status]
+workflows: [portfolio-review, exec-brief, cross-program-prioritization]
+defaultMutationTier: tier1_low
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

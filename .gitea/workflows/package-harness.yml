@@ -1,0 +1,113 @@
+name: AIR Harness CI / Release
+
+# Two jobs: build+test the Go `air` CLI (cross-platform binaries), and package the
+# content (persona packs + harness bundle + manifest.json). On a version tag both
+# sets of artifacts are attached to a release.
+# GitHub-Actions-compatible syntax — runs on Gitea Actions and GitHub Actions.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - 'air/**'
+      - 'pod-bundle/**'
+      - 'harness.manifest.yaml'
+      - 'profiles/**'
+      - '.gitea/workflows/package-harness.yml'
+
+jobs:
+  cli:
+    name: Build & test air CLI
+    runs-on: ubuntu-24.04
+    env:
+      GOPRIVATE: truenas-scale-1.tail5a208d.ts.net
+      GOINSECURE: truenas-scale-1.tail5a208d.ts.net
+    defaults:
+      run:
+        working-directory: air
+    steps:
+      - uses: actions/checkout@v4
+      # air imports the private teo module from the Cloud-Byte-Consulting Gitea.
+      # Rewrite the HTTPS module URL to the authenticated :30008 endpoint so `go`
+      # can fetch it. Uses the built-in GITEA_TOKEN (auto-provided per run);
+      # Gitea accepts a bare token as the URL user. NOTE: that token is
+      # repo-scoped by default — teo must be readable with it, otherwise swap
+      # in a PAT secret with read access to teo. The runner must also reach the
+      # Gitea over HTTPS (443) for the go-import meta.
+      - name: Configure private Gitea Go module auth
+        run: git config --global url."http://${{ secrets.GITEA_TOKEN }}@truenas-scale-1.tail5a208d.ts.net:30008/".insteadOf "https://truenas-scale-1.tail5a208d.ts.net/"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: air/go.mod
+          cache: true
+      - name: Vet
+        run: go vet ./...
+      - name: Unit + integration tests
+        run: go test ./...
+      - name: E2E tests
+        run: go test -tags e2e ./e2e/...
+      - name: Derive version
+        id: ver
+        run: echo "v=${GITHUB_REF_NAME:-$(git rev-parse --short HEAD)}" >> "$GITHUB_OUTPUT"
+      - name: Cross-compile (linux/mac/windows × amd64/arm64)
+        run: make cross VERSION=${{ steps.ver.outputs.v }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: air-cli
+          path: air/dist/bin/
+          if-no-files-found: error
+
+  content:
+    name: Package persona packs + bundle
+    runs-on: ubuntu-24.04
+    env:
+      GOPRIVATE: truenas-scale-1.tail5a208d.ts.net
+      GOINSECURE: truenas-scale-1.tail5a208d.ts.net
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure private Gitea Go module auth
+        run: git config --global url."http://${{ secrets.GITEA_TOKEN }}@truenas-scale-1.tail5a208d.ts.net:30008/".insteadOf "https://truenas-scale-1.tail5a208d.ts.net/"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: air/go.mod
+          cache: true
+      - name: Build air
+        run: cd air && go build -o "$GITHUB_WORKSPACE/air-bin" .
+      - name: Scaffold persona packs (idempotent)
+        run: ./air-bin personas scaffold
+      - name: Fail if scaffolder output is uncommitted
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- pod-bundle/personas; then
+            echo "::error::Persona packs differ from scaffolder. Re-run 'air personas scaffold' and commit."
+            git --no-pager diff --stat -- pod-bundle/personas; exit 1
+          fi
+      - name: Package
+        run: ./air-bin package --out dist
+      - run: cat dist/manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: air-content
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [cli, content]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: air-cli, path: release/bin }
+      - uses: actions/download-artifact@v4
+        with: { name: air-content, path: release }
+      - name: Publish (GitHub; on Gitea the uploaded artifacts are the durable output)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/bin/*
+            release/air-harness-*.*
+            release/manifest.json
+        continue-on-error: true

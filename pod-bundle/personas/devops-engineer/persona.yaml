@@ -1,0 +1,14 @@
+# Persona pack — selects skills, evidence, workflows, and gate posture for the DevOps role.
+# The 5 pod files alongside this carry the editable Pod definition.
+id: devops-engineer
+role: DevOps
+name: "DevOps Engineer"
+pod: ./pod.md
+skills:
+  shared: [powershell-scripting, evidence-grounded-investigation]
+  router: [team-alpha, team-beta]
+  add: [infrastructure-as-code, ci-cd-pipeline-engineering, release-and-artifact-management]   # net-new, author under pod-bundle/skills/
+sources: [pipelines, ci-logs, iac-repos, deploy-manifests, registries, environments]
+workflows: [pipeline-build, iac-change, deploy-rollback, env-provisioning]
+defaultMutationTier: tier3_high_exposure
+surfaces: [omnigent-supervisor, cachy, token-dashboard]

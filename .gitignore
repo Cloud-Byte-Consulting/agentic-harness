@@ -1,0 +1,10 @@
+dist/
+air/dist/
+air/air
+
+# Generated/symlinked skill views — canonical source is pod-bundle/skills/.
+# Recreate after clone with `air skills link` (symlinks) or `air skills sync` (copies).
+pod-bundle/.claude
+pod-bundle/.cursor
+pod-bundle/.github
+pod-bundle/.gemini

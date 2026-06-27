@@ -1,0 +1,18 @@
+team:
+  name: test-default
+  shape: inverted-pyramid
+  operatingModel: B
+  pods: 1
+economics:
+  defaultWorld: compose
+talent:
+  personas: [software-engineer]
+  hireFor: [curiosity, first-principles]
+governance:
+  agentIdentity: required
+  policyEnforcement: gateway
+  tiers: { write: tier2_elevated, production: tier3_high_exposure }
+  audit: enabled
+pipeline:
+  learningMode: hourglass
+  reviewLoop: required

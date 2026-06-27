@@ -1,0 +1,42 @@
+harness:
+  name: AIR
+  release: "test-1.0"
+
+defaults:
+  registry: "example/registry"
+
+components:
+  - id: urn:air:test:router:role-router
+    repo: copilot-role-router
+    version: "^1.4"
+    kind: archive
+    lifecycle: archived
+    layer: core
+    personas: []
+    status: archived
+    replaces: omnigent/examples/role_router/config.yaml
+
+  - id: urn:air:test:proxy:cachy
+    repo: Cachy
+    version: ">=0.3 <0.4"
+    kind: oci
+    lifecycle: service
+    layer: platform
+    personas: [software-engineer, site-reliability-engineer]
+
+  - id: urn:air:test:obs:token-dashboard
+    repo: token-dashboard
+    version: "~0.1"
+    kind: oci
+    lifecycle: service
+    layer: platform
+    personas: [engineering-manager]
+
+  - id: urn:air:test:content:pod-bundle
+    repo: agentic-harness
+    path: pod-bundle
+    version: ">=2026.06"
+    kind: archive
+    lifecycle: content
+    layer: core
+    personas: [all]

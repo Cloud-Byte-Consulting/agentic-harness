@@ -1,0 +1,93 @@
+# AIR Harness — bill of materials (BOM).
+# Each component keeps its own repo + semver; this manifest pins a known-good set
+# and records how `air` installs each via its native artifact kind. See
+# docs/packaging_and_personas.md and docs/the_agent_harness_stack.md.
+harness:
+  name: AIR
+  release: "2026.06"
+
+defaults:
+  registry: "truenas-scale-1.tail5a208d.ts.net:30008/Cloud-Byte-Consulting"
+
+# Operating model decides which components install (see docs/team_structures_and_operating_models.md):
+#   B (embedded)   -> pods + role-router + persona packs (no shared platform)
+#   C (B+platform) -> everything below (discovery, proxy, observability added)
+components:
+  # ---- Runtime (Phase 1+: Omnigent owns all session/bootstrap concerns) ----
+  # air bootstrap / MCP-inject / session paths are DEPRECATED in favour of the
+  # Omnigent stack profile (omnigent/profiles/openengine_stack.yaml).
+  - id: urn:air:cbc:runtime:omnigent
+    repo: omnigent
+    version: ">=0.1"
+    kind: pipx
+    lifecycle: service
+    layer: runtime
+    personas: [all]
+    note: "Surviving runtime. Absorbs air bootstrap, MCP-inject, session lifecycle. Phase 1."
+
+  # ---- Platform layer (installed for operatingModel: C) ----
+  - id: urn:air:cbc:discovery:ard
+    repo: Agentic-Resource-Discovery
+    version: ">=0.9"
+    kind: pipx               # python conformance CLI + spec
+    lifecycle: tool
+    layer: platform
+    personas: [all]
+
+  - id: urn:air:cbc:proxy:cachy
+    repo: Cachy
+    version: "~0.1"          # Cachy v0.1.0 (first tagged release)
+    kind: oci                # Go binary also available (kind: binary)
+    artifact: "cachy:{version}"
+    lifecycle: service
+    layer: platform
+    personas: [software-engineer, site-reliability-engineer, devops-engineer, data-engineer, cybersecurity-engineer]
+
+  - id: urn:air:cbc:obs:token-dashboard
+    repo: token-dashboard
+    version: "~0.1"
+    kind: oci
+    lifecycle: service
+    layer: platform
+    personas: [engineering-manager, lead-program-manager, business-analyst, data-engineer, devops-engineer]
+
+  - id: urn:air:cbc:policy:sentry
+    repo: Agentic-Sentry
+    version: "~0.1"
+    kind: oci
+    artifact: "agentic-sentry-gateway:{version}"
+    lifecycle: service
+    layer: platform
+    personas: [all]
+
+  # ---- Orchestration + governance (always installed: B and C) ----
+  # ARCHIVED (Phase 2): orchestration moved to Omnigent supervisor YAML.
+  # Judge/hill-climb ported: deterministic budget as a nessie policy, Judge as a skill.
+  # Successor: omnigent/examples/role_router/config.yaml
+  - id: urn:air:cbc:router:role-router
+    repo: copilot-role-router
+    version: "^1.4"
+    kind: archive
+    lifecycle: archived
+    layer: core
+    personas: []
+    status: archived
+    replaces: omnigent/examples/role_router/config.yaml
+
+  # ---- Content: pods, personas, specs (always installed) ----
+  - id: urn:air:cbc:content:pod-bundle
+    repo: agentic-harness
+    path: pod-bundle
+    version: ">=2026.06"
+    kind: archive
+    lifecycle: content
+    layer: core
+    personas: [all]
+
+  - id: urn:air:cbc:spec:teo
+    repo: teo
+    version: ">=0.1"
+    kind: archive
+    lifecycle: content
+    layer: core
+    personas: [all]
