@@ -1,0 +1,32 @@
+# CLO-9 finish — enforce our ACTUAL mcp-policies bundle through agentgateway's extAuthz.
+# OPA loads the REAL mcp_auth.rego (mounted from Agentic-Sentry) + an Envoy adapter +
+# an empty (secret-free) group config. Run: docker compose up -d && ./test.sh
+services:
+  opa:
+    image: openpolicyagent/opa:latest-envoy
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - --set=plugins.envoy_ext_authz_grpc.addr=:9191
+      - --set=plugins.envoy_ext_authz_grpc.path=mcp/envoy/allow
+      - --set=decision_logs.console=true
+      - /policies/mcp_auth.rego
+      - /policies/envoy-adapter.rego
+      - /data/config.json
+    volumes:
+      - ../../../Agentic-Sentry/mcp-policies/policies/mcp_auth.rego:/policies/mcp_auth.rego:ro
+      - ./envoy-adapter.rego:/policies/envoy-adapter.rego:ro
+      - ./config.json:/data/config.json:ro
+    ports: ["18181:8181"]   # host-exposed so test.sh can query our policy's verdict directly
+
+  backend:
+    image: hashicorp/http-echo
+    command: ["-text=ALLOWED by our real mcp_auth policy", "-listen=:5678"]
+
+  agentgateway:
+    image: ghcr.io/agentgateway/agentgateway:latest
+    command: ["-f", "/config.yaml"]
+    volumes: ["./agentgateway.yaml:/config.yaml:ro"]
+    ports: ["13000:3000"]
+    depends_on: [opa, backend]

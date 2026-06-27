@@ -1,0 +1,9 @@
+{
+  "mcp": {
+    "auth": {
+      "config": {
+        "group_rbac": { "reader_groups": [], "operator_groups": [], "admin_groups": [] }
+      }
+    }
+  }
+}
