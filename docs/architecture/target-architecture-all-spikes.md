@@ -150,5 +150,9 @@ fragments into four bolt-ons with conflicting policy languages.
    `bindSession` before any compliance claim.
 4. **ActPlane** — adopt the eBPF *pattern*, build/own internally, **Linux-only, accept
    PARTIAL**; highest-value gap-closer *and* the precondition for governing RLM.
-5. **RLM** — opt-in governed long-context **only**, gated on beating *our* compaction +
-   the sandbox floor (+ ActPlane for full in-REPL coverage). Never the default.
+5. **RLM** — **keep, opt-in now** (not the default): a governed long-context capability,
+   gated on beating *our* compaction + the sandbox floor (+ ActPlane for full in-REPL
+   coverage). **Target end-state: on-demand, agent-invoked** — the agent decides a job
+   needs long-context and calls the RLM tool itself (the E5(a) `rlm_query` tool/skill
+   shape, not a session mode). So sequence it *after* ActPlane lands (for governing the
+   REPL), but it stays on the roadmap rather than shelved.

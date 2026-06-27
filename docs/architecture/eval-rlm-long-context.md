@@ -16,6 +16,12 @@ open** (sub-call caps, cost budgets, sandboxed REPL, native-plane authz)?
 Outcomes: **GO** (offer RLM as a governed long-context mode) · **PARTIAL** (opt-in
 tool for specific task types) · **NO-GO** (compaction stays; document why).
 
+**Product direction (decided 2026-06-27): keep RLM — opt-in now, target end-state is
+on-demand, agent-invoked.** The agent detects that a job needs long-context and calls
+the RLM tool itself (the E5(a) `rlm_query` tool/skill, not a session mode). So the live
+questions are no longer *whether*, but **how to govern the REPL** (→ depends on
+[ActPlane](eval-actplane-native-plane.md)) and **how the agent auto-selects it per job**.
+
 ## 2. What RLM is, and why it's relevant to us
 
 An RLM loads an arbitrarily long prompt as a **variable in a Python REPL** (not the
@@ -112,11 +118,13 @@ optimization (the paper's own future work).
 - **E4 — sandbox (Q4).** Run the REPL inside the Omnigent OS sandbox; confirm fs
   isolation + network interception apply to the generated code (not just the agent
   tool calls). Output: pass/fail + any sandbox gaps for in-REPL execution.
-- **E5 — integration shape (Q5).** Prototype RLM two ways and compare DX/governance:
-  (a) an Omnigent **tool/skill** the agent calls for a long-context sub-task
-  (`rlm_query(haystack, question)`), vs (b) a session/harness **mode**. Assess
-  which composes better with our guardrails + the supervisor. Output: a
-  recommendation.
+- **E5 — integration shape + agent auto-selection (Q5).** The shape is **decided: (a)
+  an Omnigent tool/skill the agent invokes** (`rlm_query(haystack, question)`) — not a
+  session mode. So E5 instead: (i) build that governed tool; (ii) design the **agent's
+  on-demand trigger** — what signal makes the agent reach for RLM (e.g. context/over-budget
+  estimate, a "this won't fit / needs dense access" heuristic, or an explicit job label),
+  and how it's surfaced (a skill the supervisor can dispatch). Output: the tool + the
+  auto-select policy. (b) session-mode is out unless (a) proves insufficient.
 
 ## 7. Success criteria / decision gates
 
