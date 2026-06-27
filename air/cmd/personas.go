@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloud-byte/air/internal/personas"
 	"github.com/spf13/cobra"
-	"truenas-scale-1.tail5a208d.ts.net/Cloud-Byte-Consulting/teo"
+	"github.com/cloud-byte-consulting/teo"
 )
 
 func newPersonasCmd() *cobra.Command {

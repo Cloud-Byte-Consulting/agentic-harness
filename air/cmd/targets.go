@@ -10,7 +10,7 @@ import (
 	"github.com/cloud-byte/air/internal/agents"
 	"github.com/cloud-byte/air/internal/targets"
 	"github.com/spf13/cobra"
-	"truenas-scale-1.tail5a208d.ts.net/Cloud-Byte-Consulting/teo"
+	"github.com/cloud-byte-consulting/teo"
 )
 
 // userSets merges custom target sets from (lowest→highest precedence):

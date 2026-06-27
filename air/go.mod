@@ -7,7 +7,7 @@ require (
 	github.com/onsi/gomega v1.42.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	truenas-scale-1.tail5a208d.ts.net/Cloud-Byte-Consulting/teo v0.1.1
+	github.com/cloud-byte-consulting/teo v0.1.1
 )
 
 require (
