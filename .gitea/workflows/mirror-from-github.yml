@@ -1,8 +1,9 @@
 name: Mirror from GitHub
 # Non-destructive downstream sync: GitHub (Cloud-Byte-Consulting) is source of truth;
 # fast-forwards refs/heads + refs/tags into Gitea (triggering Gitea Actions/packages),
-# leaving issues/packages/releases/PR-refs intact. Set secret GITEA_SYNC_TOKEN
-# (Gitea org write). Must live on the default branch. Don't commit on Gitea once live.
+# leaving issues/packages/releases/PR-refs intact. Set secret MIRROR_PUSH_TOKEN
+# (Gitea org write; the GITEA_ prefix is reserved, so the secret can't be named that).
+# Must live on the default branch. Don't commit on Gitea once live.
 on:
   schedule:
     - cron: '*/15 * * * *'
@@ -15,11 +16,11 @@ jobs:
       - name: Sync all repos
         env:
           GITEA_BASE: ${{ github.server_url }}
-          GITEA_TOKEN: ${{ secrets.GITEA_SYNC_TOKEN }}
+          GITEA_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}
           GH_ORG: Cloud-Byte-Consulting
         run: |
           set -u
-          REPOS="agentic-harness Agentic-Resource-Discovery Agentic-Sentry Cachy copilot-role-router teo token-dashboard"
+          REPOS="agentic-harness Agentic-Sentry Cachy copilot-role-router teo token-dashboard"
           case "$GITEA_BASE" in
             https://*) host="${GITEA_BASE#https://}"; scheme=https ;;
             *)         host="${GITEA_BASE#http://}";  scheme=http  ;;
