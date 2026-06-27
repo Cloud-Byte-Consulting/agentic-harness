@@ -21,6 +21,7 @@ Canonical docs for the **AIR + Omnigent consolidation** (independence of tooling
 | [eval-semantic-early-stopping.md](eval-semantic-early-stopping.md) | Spike plan (small) — embedding-convergence halting folded into `hillclimb_budget` + "keep the best round" in the Judge skill |
 | [research-triage.md](research-triage.md) | Triage of inbound papers/docs — spike-worthy vs concepts-only vs skip, with reasoning grounded in our stack |
 | [target-architecture-all-spikes.md](target-architecture-all-spikes.md) | Synthesis (workflow-verified) — how the 5 pillars change if all 5 spikes land, the new enforcement planes, trade-offs, and the open-items gaps |
+| [tdf-frame-mapping.md](tdf-frame-mapping.md) | Adopted formalism (CLO-8) — our architecture in TDF/FRAME terms (framed autonomy); φ as a first-class execution-admission plane |
 | [enterprise-pitch.md](../enterprise-pitch.md) | GTM narrative, BECU-style pilot framing, audit for compliance buyers |
 | [air-vs-omnigent.md](air-vs-omnigent.md) | Prior overlap analysis (historical; consolidation supersedes runtime split) |
 | [aos-vs-air.md](aos-vs-air.md) | AOS pillar mapping vs air ecosystem (reference; `aos` repo archived after merge) |
