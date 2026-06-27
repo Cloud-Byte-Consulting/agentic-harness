@@ -1,0 +1,29 @@
+# CLO-9 — prove the bet: agentgateway extAuthz delegates the verdict to OPA.
+# allow `echo` (200, forwarded to backend); deny others (403 from OPA, pre-backend).
+# Run:  docker compose up -d  &&  ./test.sh   ·  logs:  docker compose logs opa
+services:
+  opa:
+    image: openpolicyagent/opa:latest-envoy
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+      - "--set=plugins.envoy_ext_authz_grpc.path=mcp/authz/allow"
+      - "--set=decision_logs.console=true"
+      - "/policy.rego"
+    volumes:
+      - ./policy.rego:/policy.rego:ro
+    # no host ports — agentgateway reaches OPA at opa:9191 over the compose network
+
+  backend:                      # trivial HTTP backend: a forwarded (allowed) call returns 200
+    image: hashicorp/http-echo
+    command: ["-text=ALLOWED: forwarded to backend", "-listen=:5678"]
+
+  agentgateway:
+    image: ghcr.io/agentgateway/agentgateway:latest
+    command: ["-f", "/config.yaml"]
+    volumes:
+      - ./agentgateway.yaml:/config.yaml:ro
+    ports: ["13000:3000", "15001:15000"]
+    depends_on: [opa, backend]
