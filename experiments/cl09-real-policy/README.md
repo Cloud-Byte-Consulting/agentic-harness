@@ -7,12 +7,13 @@ tri-state policy) enforced through agentgateway's `extAuthz` → OPA.
 | :-- | :-- | :-- |
 | `get_repo` | **200** (forwarded) | `allow` (read-prefix) |
 | `delete_repository` | **403** | `deny` (OE boundary: `delete` token) |
-| `get_email` | **403** | `require_approval` (read-prefix + `email` token) |
+| `get_email` | **428** | `require_approval` (read-prefix + `email` token) → Omnigent ASK |
 
 So CLO-9's bet is **finished, not just proven**: agentgateway's `extAuthz` delegates to
-our **real Rego bundle** (`data.mcp.auth.verdict`), enforcing the **full tri-state**.
-`require_approval` blocks at the gateway (ext_authz is binary OK/Denied); in production
-**Omnigent resolves it via ASK** (a `428`/deny-with-status carry, per the spike).
+our **real Rego bundle** (`data.mcp.auth.verdict`), enforcing the **full tri-state** via a
+**structured ext_authz response** — `allow`→forward (200), `deny`→403, and
+**`require_approval`→428** (with an `x-mcp-verdict` header), which **Omnigent resolves via
+its ASK flow** rather than a blanket block.
 
 ## What this adds over [cl09-agentgateway-ext-authz-opa](../cl09-agentgateway-ext-authz-opa/)
 
@@ -38,6 +39,5 @@ docker compose down
 
 ## True follow-ups (not blockers)
 - A real **MCP backend** on an `mcp` route (this uses a plain-HTTP route to isolate authz).
-- Carry **`require_approval`** as a `428`/header → Omnigent ASK (vs a blanket 403).
 - Forward the **JWT** (`includeRequestHeaders: ["authorization"]`) so **groups** flow → the `is_admin` carve-out.
 - `bindSession` anti-spoof + the `OE_AUDIT_LOG` join fields.

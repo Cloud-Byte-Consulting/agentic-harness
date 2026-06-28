@@ -9,7 +9,7 @@ services:
       - --server
       - --addr=0.0.0.0:8181
       - --set=plugins.envoy_ext_authz_grpc.addr=:9191
-      - --set=plugins.envoy_ext_authz_grpc.path=mcp/envoy/allow
+      - --set=plugins.envoy_ext_authz_grpc.path=mcp/envoy/response
       - --set=decision_logs.console=true
       - /policies/mcp_auth.rego
       - /policies/envoy-adapter.rego
