@@ -1,229 +1,207 @@
-# Enterprise pitch — Governed Agent Platform
+# Open Engine — the Governed Agentic Platform
 
-**Status:** GTM draft for post-consolidation stack (Omnigent runtime + Sentry/OPA + satellites).  
-**Audience:** Platform engineering, security, compliance, FinOps, line-of-business AI programs (e.g. regulated financial services).
+**One platform, not a toolchain you assemble.**
+
+> The governed agentic platform where orchestration, policy, cost, and audit are **one
+> system** — not four products with seams where governance leaks.
+
+**Status:** GTM pitch for the consolidated stack (Omnigent engine + Agentic-Sentry/OPA +
+token plane). **Audience:** platform engineering, security, compliance, FinOps, and
+regulated line-of-business AI programs (e.g. financial services).
+**Start here:** [GETTING_STARTED.md](../GETTING_STARTED.md) · [governed-platform architecture](architecture/governed-platform-architecture.md).
 
 ---
 
 ## One line
 
-**Run AI agents at enterprise scale with the same rigor you apply to identity, audit, and spend — without locking teams into one vendor model or one IDE.**
+**Run AI agents at enterprise scale with the same rigor you apply to identity, audit, and
+spend — governed by deterministic policy, across any harness, as one integrated system.**
 
 ---
 
-## The problem (30 seconds)
+## The 30-second problem
 
-Enterprises are deploying coding agents, copilots, and autonomous workflows faster than governance can keep up. That gap shows up as:
+Enterprises adopting agentic AI quietly assemble a stack: one tool to orchestrate agents,
+another to broker MCP traffic, a third for cost, a fourth bolted on for logging. Each is
+bought and wired separately — and the **seams between them are exactly where control
+fails**:
 
-- **Tool sprawl** — MCP servers, native shell/file tools, and vendor APIs with no single authorization model
-- **Non-deterministic “policy”** — LLM-judged allow/deny that auditors cannot replay or sign off on
-- **Blind spots** — MCP gateways that secure *some* traffic while `Bash`, `run_command`, and direct integrations bypass them
-- **Cost opacity** — token burn spread across Claude, Copilot, Cursor, and APIs with no honest measurement or enforcement
-- **Fragmented stacks** — orchestration in one product, security in another, observability in a third
+- **Tool sprawl** — every agent, MCP server, and model added its own way, with no single choke point.
+- **Non-deterministic "policy"** — an LLM that decides whether an action is allowed is *a control that can be talked out of*. Prompt-based guardrails are advisory, not enforced, and an auditor cannot replay them.
+- **Blind spots** — a model writes a script, the script runs `git push` / `curl` / `rm`, and your tool-call hooks never saw it. It happened below the layer you were watching.
+- **Cost opacity** — token burn spread across Claude, Copilot, Cursor, and APIs that you can estimate but never reconcile.
+- **Fragmented stacks** — orchestration in one product, security in another, observability in a third, so the audit story has gaps precisely at the boundaries.
 
-Regulated teams need **deterministic policy, identity-bound access, and an audit trail** — without killing developer velocity.
-
-This is the line between **vibe coding** (prompt-and-accept) and **agentic engineering** (AI as an implementation engine inside human-designed constraints, tests, and feedback) — the framing in Google's *The New SDLC with Vibe Coding* (2026). Vibe coding is low-CapEx / **high-OpEx** (rework, incidents, audit gaps); agentic engineering is the CapEx — the governed harness — that drives OpEx down. **Our platform is the harness that makes agentic engineering enforceable.** That paper's own equation — **"Agent = Model + Harness," the model only ~10%** — is the quantified case for investing in the governed harness, not just the model.
-
----
-
-## The solution
-
-**A governed agent platform** with a deliberate split of ownership:
-
-| Layer | Component | Enterprise value |
-|-------|-----------|------------------|
-| **Runtime** | Omnigent | Sessions, sandboxes, multi-harness orchestration, human-in-the-loop (ASK) |
-| **Policy** | Agentic-Sentry + OPA | **Single authz truth** — Rego, CI-tested, Entra RBAC |
-| **Discovery** | ARD | Federated catalog of MCP tools, agents, skills |
-| **Cost** | token-dashboard + Omnigent budgets | Measured burn + enforced thresholds |
-| **Contracts** | teo | Dense, parseable agent outputs for downstream systems |
-| **Optimization** | Cachy (optional) | Token-plane proxy when API-key mode applies |
-
-**Design principle:** Omnigent owns the **session and UX**. **OPA owns every allow/deny.** No LLM judges on security gates.
+You didn't buy a platform. You bought an **integration project that never finishes** — and
+governance leaks through every join. This is the line between **vibe coding**
+(prompt-and-accept) and **agentic engineering** (AI as an implementation engine inside
+human-designed constraints, tests, and feedback) — the framing in Google's *New SDLC*
+(2026). Vibe coding is low-CapEx / **high-OpEx** (rework, incidents, audit gaps); agentic
+engineering is the CapEx — the governed harness — that bends OpEx down.
 
 ---
 
-## Enterprise proof points
+## The holistic solution — one platform, five pillars engineered as one
 
-1. **Identity-native** — OIDC / Microsoft Entra; tool access tied to groups and roles
-2. **Deterministic authorization** — Every tool path resolves to a **Rego rule** (versioned, PR-reviewed, `opa test`)
-3. **Defense in depth** — MCP via Sentry; native tools via PreToolUse → OPA (`opa_delegate` / `opa-hook`)
-4. **Fail-closed** — Policy engine unreachable → **deny**
-5. **Audit-ready** — See [Audit trail](#audit-trail-where-it-lives) below
-6. **Honest cost governance** — Measured vs estimated lanes; session/daily budgets
-7. **Deploy where you operate** — Kubernetes profile, private ARD registry
-8. **Harness freedom** — Claude, Codex, Cursor, Copilot, Antigravity — **one policy plane**
+Open Engine is **one integrated platform**, built so five pillars interlock instead of
+merely interoperating. **The integration *is* the product.**
+
+- **ENGINE (Omnigent)** — runs governed agent sessions across Claude Code, Codex, Cursor, Pi, and YAML agents. Native-plane `opa_delegate`, a `role_router` supervisor, sandboxes, and human-in-the-loop **ASK** for the actions that warrant a human.
+- **POLICY GATEWAY (Agentic-Sentry)** — the MCP plane: OIDC + OPA on **every** `tools/call`, returning tri-state **allow / deny / require_approval**.
+- **TOKEN / COST plane** — **Cachy** (LLM context-optimization proxy), **teo** (token-efficient output format), and **token-dashboard** with honest exact / activity / estimate cost lanes.
+- **GOVERNANCE** — the principle is **the LLM proposes, OPA decides.** Two enforcement planes — **native** (`opa_delegate`, kernel-backed by ActPlane eBPF) and **MCP** (agentgateway / Sentry) — call **one shared Rego bundle** (`mcp_auth.rego`). Entra groups can only **RELAX** policy, only from cryptographically verified tokens. Everything **fails closed**.
+- **HUB (agentic-harness)** — the architecture, the spikes, and the getting-started guide that ties it together.
+
+**Why holistic matters — the spine of this platform.** Competitors hand you orchestration
+*or* an MCP broker *or* a cost dashboard, and leave you to glue policy across them. In a
+glued stack the native runtime and the MCP gateway enforce *different* rules, drift apart,
+and create exactly the gap an agent exploits. Open Engine collapses that gap by design:
+
+- **One policy bundle, two planes.** The *same* `mcp_auth.rego` decides at both choke points — native runtime and MCP gateway. No second policy language, no drift, no "which rule won?"
+- **One audit fabric.** Authz, runtime, and artifact events are *correlated*, not merely collected — the join keys are native, not a best-effort stitch across four vendors' schemas.
+- **One cost plane.** Optimization (Cachy), output format (teo), and reconciliation (dashboard) are the same system, not three invoices.
 
 ---
 
-## Audit trail — where it lives
+## Proven, not promised
 
-The audit trail is **not one log file** — it is **correlated events across three planes**, stitched by `request_id`, `session_id`, `subject_id` (Entra OID), and timestamp.
+These are **accepted, Done** spikes (CLO-7…11), not a roadmap:
+
+- **CLO-9 — one bundle, enforced live (the proof the whole pitch rests on).** Our **real production** `mcp_auth.rego` runs through agentgateway's extAuthz → OPA, live: **allow → 200, deny → 403, require_approval → 428**. The native plane (`opa_delegate`) is **built, not planned** — the *same bundle* at both choke points.
+- **CLO-10 — the blind spot, closed.** ActPlane eBPF / BPF-LSM enforcement sits *beneath* the native plane and catches **indirect exec** — a `git` / `curl` / `rm` reached via a model-written script — that tool-call hooks miss. Kernel-level, on a BPF-LSM-capable host.
+- **CLO-7 — semantic early-stopping.** Embedding-convergence `STOP_CONVERGED`, judge-free: **~38% fewer tokens in the refine loop** — a direct, measured OpEx lever.
+- **CLO-11 — governed long-context (RLM).** Opt-in tool with a sub-call fan-out cap, a token-budget gate, and a sandbox. It survived an adversarial review that **found and fixed** a prompt-injection sandbox escape — governance proven under attack, not just on paper.
+- **CLO-8 — the formalism.** Agentic-BPM / TDF / FRAME treats execution-admission **φ** as a first-class artifact: the LLM proposes an action; an **OPA decision (φ, not an LLM)** admits it. The decision boundary is formal and inspectable.
+
+---
+
+## The economics — the harness is the asset
+
+**Agent = Model + Harness.** Google's New-SDLC equation puts the model at **~10%** of a
+working agent. The other 90% — the harness — is where governance, cost control, and audit
+either exist or don't.
+
+| | Vibe coding (prompt-and-accept) | Agentic engineering (governed harness) |
+|---|---|---|
+| **CapEx** | ~zero — just buy model seats | The harness: policy, cost plane, audit |
+| **OpEx** | **High, compounding** — rework, incident response, audit remediation, runaway token spend | **The lever to bend OpEx down** — enforced policy heads off incidents, the cost plane targets waste, audit is a byproduct rather than a project |
+| **The asset** | None — you rent the model, and it depreciates the day the next one ships | **The harness compounds** — every policy, approved pattern, and closed audit gap is durable capital |
+
+The model is a *rented commodity*; the **harness is the 90% you own**, and it's where ROI
+lives. The platform is the lever on each OpEx driver — and the pilot measures the
+movement against *your* baseline (below), rather than us asserting a number:
+
+- **Rework** — policy stops bad actions before they land, not after review.
+- **Incidents** — enforcement is deterministic and fail-closed, including the indirect actions tool-hooks miss.
+- **Audit cost** — evidence is generated continuously and already correlated, instead of reconstructed under deadline.
+- **Token spend** — cost is measured per session, and the refine loop stops when it has *converged*, not when it is exhausted (CLO-7).
+
+**For the CFO / FinOps buyer:** Open Engine is the CapEx line item that bends the agentic
+OpEx curve down. You are not buying a smarter model — you are buying the asset that makes
+*any* model safe and economical to run at scale.
+
+---
+
+## Governance — no ungoverned path (on a BPF-LSM-capable host)
+
+- **OPA decides, never an LLM.** Every consequential action resolves to a **Rego rule** — versioned, PR-reviewed, `opa test`-gated. An auditor can replay it.
+- **Two planes, one bundle.** MCP via Agentic-Sentry; native tools via `opa_delegate`; **indirect exec** (model-written scripts) via ActPlane at the kernel. Same `mcp_auth.rego` throughout — so there is no path that an agent takes which a policy did not decide.
+- **Identity-native.** OIDC / Microsoft Entra; tool access tied to groups and roles; groups only **relax** enforcement, only from cryptographically verified tokens.
+- **Fail closed.** Policy engine unreachable, missing config, missing cost data, a renamed upstream hook → **deny or bound**, never silently open.
+- **Harness freedom.** Claude, Codex, Cursor, Copilot, Pi — **one policy plane**, not one IDE.
+
+---
+
+## Audit — one fabric, three planes
+
+Not one log file — **correlated events across three planes**, stitched by `request_id`,
+`session_id`, `subject_id` (Entra OID), and policy-bundle version. When compliance asks
+"who did what, under which policy, at what cost, and who approved it?" — that's **a query,
+not a quarter-long reconstruction project**.
 
 ```mermaid
 flowchart LR
-    subgraph authz [Authz plane - immutable decisions]
-        sentry[Sentry gateway]
-        opa[OPA decision]
-        opaHook[opa-hook / opa_delegate]
+    subgraph authz [Authz plane — immutable decisions]
+        sentry[Sentry gateway]; opa[OPA decision]; opaHook[opa_delegate / ActPlane]
     end
-
-    subgraph runtime [Runtime plane - session narrative]
-        omni[Omnigent session events]
-        elicit[Elicitation ASK approve/deny]
-        policy[Policy engine verdicts]
+    subgraph runtime [Runtime plane — session narrative]
+        omni[Omnigent session]; elicit[ASK approve/deny]
     end
-
-    subgraph artifacts [Artifact plane - durable outputs]
-        teo[TEO structured results]
-        cost[token-dashboard daily burn]
+    subgraph artifacts [Artifact plane — durable outputs]
+        teo[TEO results]; cost[token-dashboard burn]
     end
-
-    subgraph export [Enterprise export Phase 5]
-        siem[SIEM / log archive]
-        compliance[Compliance retention]
+    subgraph export [Enterprise export]
+        siem[SIEM / retention]
     end
-
-    sentry --> opa
-    opaHook --> opa
-    sentry --> export
-    opaHook --> export
-    omni --> export
-    elicit --> export
-    policy --> export
-    teo --> export
-    cost --> export
+    sentry --> opa; opaHook --> opa
+    sentry --> export; opaHook --> export; omni --> export; elicit --> export; teo --> export; cost --> export
 ```
 
-### 1. Authz plane (strongest audit signal) — **Sentry + OPA**
+| Plane | Source | Records | Audit use |
+| :-- | :-- | :-- | :-- |
+| **Authz** (strongest signal) | Sentry + OPA | `timestamp`, `request_id`, `session_id`, `subject_id`/`groups`, `tool_name`, `arguments` (redacted), `allow`/`reason`, **policy-bundle version** | The legal-grade chokepoint record: who tried what, was it allowed, under which policy version. |
+| **Runtime** | Omnigent session | session start/stop, identity, harness, model; **ASK approvals** (who approved a `run_command`) | The narrative — not just "deny create_pr" but "user was prompted and refused." |
+| **Artifact** | teo + token-dashboard | structured verdicts/outputs; exact/activity/estimate cost lanes | "Show me the output and the spend for this engagement." |
+| **Supply chain** | Rego CI + bundles | `opa test` pass/fail + commit SHA; bundle version; OPA activation time | Prove which rules were in force at decision time. |
 
-**When:** Every MCP `tools/call` through the gateway; every native tool check via `opa-hook` / `opa_delegate` posting to the same OPA endpoint.
-
-**What to record (per decision):**
-
-| Field | Source |
-|-------|--------|
-| `timestamp`, `request_id` | Gateway / opa-hook |
-| `session_id` | MCP session or Omnigent session id |
-| `subject_id`, `subject_email`, `groups` | JWT / session identity |
-| `server_name`, `tool_name`, `arguments` (redacted) | OPA input |
-| `allow`, `reason` | OPA output |
-| `policy_bundle_version` / Rego revision | OPA bundle manifest |
-| `client_ip`, `duration_ms` | Gateway |
-
-**Schema:** Recommended JSON line per decision in [Agentic-Sentry/docs/production.md](../../Agentic-Sentry/docs/production.md) (audit log schema). **Phase 5 deliverable:** implement structured decision logging in gateway + opa-hook; ship to stdout / OpenTelemetry / SIEM forwarder.
-
-**Why it matters:** Auditors care about **who tried to do what, was it allowed, and under which policy version**. This is the legal-grade chokepoint record.
-
-### 2. Runtime plane — **Omnigent session events**
-
-**When:** Session lifecycle, tool dispatch, policy ASK/elicitation, sandbox actions, cost budget triggers.
-
-**What to record:**
-
-- Session start/stop, user identity, harness, model
-- Policy evaluations (phase, verdict, `deciding_policy`) — deterministic cost/rate/PII only for authz; authz itself references OPA decision id
-- **ASK / elicitation:** user approved or refused (human-in-the-loop audit)
-- Antigravity-native: permission WAITING steps bridged to web elicitation (who approved `run_command`)
-
-**Export:** Omnigent server telemetry / session API (OTLP where configured). **Phase 5:** normalize to common audit envelope with `session_id` + `subject_id`.
-
-**Why it matters:** Explains **narrative context** — not just “deny create_pr” but “agent was in session X, user was prompted, user refused.”
-
-### 3. Artifact plane — **TEO + cost**
-
-**When:** Agent completes work; daily/hourly burn rolls up.
-
-| Source | Audit use |
-|--------|-----------|
-| **teo** | Structured verdicts, dispatch plans, evidence blocks — **what was produced**, parseable for replay |
-| **token-dashboard** | Exact/activity/estimate lanes — **what it cost**, honest fidelity labels |
-| **Cachy** (optional) | Per-request metadata (latency, route) — not primary audit; supplements cost |
-
-**Why it matters:** Compliance and FinOps ask **“show me the output and the spend for this engagement.”**
-
-### 4. Policy supply chain — **Rego CI + bundles**
-
-**When:** Every policy change.
-
-**What to record:**
-
-- `opa test` in CI (pass/fail, commit SHA)
-- Bundle publish to Garage/S3 (`bundle.tar.gz` version)
-- OPA activation timestamp on sidecar
-
-**Why it matters:** **Prove which rules were in force** when a decision was made (critical for examinations).
+**Retention tiers (enterprise profile):** Hot — authz decisions/denials, 90d–1y searchable;
+Warm — session summaries + TEO artifacts, 1–7y; Cold — daily cost aggregates, 7y+ (FinOps).
 
 ---
 
-## Audit correlation (how teams use it)
+## What's built
 
-**Investigation query pattern:**
-
-1. Start from **Sentry decision log** — `allow: false`, `tool_name: run_command`, `subject_email`
-2. Join **Omnigent session** — same `session_id` → full tool trajectory, elicitations
-3. Join **TEO artifact** — structured outcome of the task
-4. Join **token-dashboard** — measured tokens for that UTC day / user
-5. Join **policy bundle version** — Rego at decision time
-
-**Retention tiers (enterprise profile):**
-
-| Tier | Data | Typical retention |
-|------|------|-------------------|
-| Hot | Authz decisions, denials | 90d–1y searchable |
-| Warm | Session summaries, TEO artifacts | 1–7y |
-| Cold | Daily cost aggregates | 7y+ (FinOps) |
+| Capability | Status |
+| :-- | :-- |
+| OPA Rego policy bundle + `opa test` | **Built** |
+| MCP plane (agentgateway extAuthz → OPA) on our real policy | **Proven live** (CLO-9: 200/403/428) |
+| Native-plane OPA gate (`opa_delegate`) | **Built** — same bundle as MCP |
+| Indirect-exec enforcement (ActPlane eBPF) | **Spike-proven / staged** (CLO-10, BPF-LSM host) |
+| Semantic early-stopping | **Built** (CLO-7) |
+| Governed long-context tool (RLM) | **Built, opt-in** (CLO-11) |
+| φ execution-admission formalism | **Adopted** (CLO-8) |
+| token-dashboard cost lanes | **Built** |
+| Structured decision-log → SIEM/OTel export | **Phase 5** (forwarder pipeline) |
 
 ---
 
-## What is built vs planned
+## The 90-day pilot
 
-| Capability | Today | Phase 5 (enterprise) |
-|------------|-------|----------------------|
-| OPA Rego + `opa test` | Built | Maintain |
-| Sentry audit JSON schema | **Documented** ([production.md](../../Agentic-Sentry/docs/production.md)) | **Implement** structured decision log |
-| Native tool OPA path | Planned (`opa_delegate`, `opa-hook`) | Log same schema as MCP |
-| Omnigent session export | Partial (telemetry) | Normalized audit envelope |
-| TEO artifacts | Built | Index by session id in export |
-| token-dashboard | Built | Feed + audit correlation id |
-| SIEM pipeline | Not wired | Fluent Bit / OTel → Splunk/DSentra/etc. |
+A bounded, **measurable** proof that the *integration* holds — not just that each part runs:
+
+- **Days 0–30 — Govern one path.** Put one agent (e.g. Claude Code) behind the Policy Gateway with your real `mcp_auth.rego`; onboard Entra OIDC; stand up the token-dashboard. Demonstrate live allow/deny/require_approval (200/403/428). **Baseline** current per-session token spend and rework rate.
+- **Days 31–60 — Two planes, one bundle.** Stand up the native plane (`opa_delegate`) against the *same* bundle; enable ActPlane eBPF on a BPF-LSM host and show an indirect `git`/`curl`/`rm` getting caught; wire ASK. Turn on semantic early-stopping and **measure** token reduction vs baseline.
+- **Days 61–90 — One fabric.** Enable the cost plane and the three-plane correlated audit trail. Walk an auditor through a single incident reconstructed from correlated events in minutes; hand FinOps the per-session cost report.
+
+**Exit criteria — what you'll have *measured*, not been promised:** deterministic policy
+enforced at both planes, one indirect-exec blind spot closed, a token-reduction number on
+your refine loops, and a correlated audit trail you can query. *Pilot ROI figures are
+measured against your baseline — we don't invent them for you.* Deploy targets: **Entra
+OIDC**, a **Kubernetes** profile, **GitHub** source-of-truth with **Gitea CI**.
 
 ---
 
 ## Customer outcomes
 
-- “Every tool call — MCP **and** native — is authorized against **our** Rego, with **our** Entra groups.”
-- “Audit asked for deny reasons and policy versions — we have them.”
-- “We know what agents cost per team per day, and budgets stop runs before they become incidents.”
-- “We didn’t pick one IDE; we picked **one policy plane**.”
-
----
-
-## Pilot (90 days)
-
-One governed workload (internal knowledge assistant or fraud-explanation workflow):
-
-- Entra-backed Sentry
-- Omnigent session server on K8s
-- ARD registry for approved MCP tools
-- Decision log + session correlation
-- token-dashboard feed for cost caps
-
----
+- "Every tool call — MCP **and** native **and** the script that ran underneath — is authorized against **our** Rego, with **our** Entra groups."
+- "Audit asked for deny reasons and policy versions — it was a query, not a project."
+- "We know what agents cost per team per day, and budgets stop runs before they become incidents."
+- "We didn't pick one IDE; we picked **one policy plane**."
 
 ## Taglines
 
-- **“Agents with an audit trail.”**
-- **“One policy plane. Any harness.”**
-- **“Deterministic gates. Human-speed agents.”**
-- **“Govern agent tools like you govern APIs.”**
+> **One platform, not a toolchain you assemble.**
+
+> **The LLM proposes. OPA decides.**
+
+> **One bundle. Both planes. Fail closed.**
+
+> **The model is 10%. We govern the other 90%. Stop renting risk — own the harness.**
 
 ---
 
 ## Related docs
 
-- [Consolidation plan](../../../.cursor/plans/AIR%20Omnigent%20Consolidation-c7d8b160.plan.md) (workspace)
-- [architecture/consolidation.md](architecture/consolidation.md) (Phase 0 — when written)
-- [Agentic-Sentry production ops](../../Agentic-Sentry/docs/production.md)
-- [integration-air-harness](../../Agentic-Sentry/docs/integration-air-harness.md)
+- [Getting started](../GETTING_STARTED.md) · [Governed-platform architecture](architecture/governed-platform-architecture.md) · [Consolidation plan](architecture/consolidation-plan.md)
+- [All-spikes target architecture](architecture/target-architecture-all-spikes.md) · [Securing agents with OPA](agent_security_opa.md) · [Audit correlation design](architecture/audit-correlation-design.md)
+- Live proof: [`experiments/cl09-real-policy/`](../experiments/cl09-real-policy/) · [Agentic-Sentry production ops](../../Agentic-Sentry/docs/production.md)
