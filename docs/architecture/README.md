@@ -2,6 +2,8 @@
 
 Canonical docs for the **AIR + Omnigent consolidation** (independence of tooling, zero overlap of functionality).
 
+> New to the platform? Start at the [**getting-started hub**](../../GETTING_STARTED.md) for the pillars and how they fit, then dive into the docs below.
+
 | Document | Purpose |
 | :--- | :--- |
 | [governed-platform-architecture.md](governed-platform-architecture.md) | **Start here** — the as-built architecture of Open Engine on the AIR/Omnigent backbone (planes, lifecycle, governance, ownership) |
