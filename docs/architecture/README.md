@@ -2,7 +2,7 @@
 
 Canonical docs for the **AIR + Omnigent consolidation** (independence of tooling, zero overlap of functionality).
 
-> New to the platform? Start at the [**getting-started hub**](../../GETTING_STARTED.md) for the pillars and how they fit, then dive into the docs below.
+> New to the platform? Start at the [**getting-started hub**](../../GETTING_STARTED.md) (and the [glossary](../../GLOSSARY.md)) for the pillars and how they fit, then dive into the docs below.
 
 | Document | Purpose |
 | :--- | :--- |

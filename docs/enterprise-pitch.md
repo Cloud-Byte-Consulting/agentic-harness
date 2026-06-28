@@ -10,6 +10,8 @@ token plane). **Audience:** platform engineering, security, compliance, FinOps, 
 regulated line-of-business AI programs (e.g. financial services).
 **Start here:** [GETTING_STARTED.md](../GETTING_STARTED.md) · [governed-platform architecture](architecture/governed-platform-architecture.md).
 
+> **Unfamiliar with a term?** Every acronym below — MCP, OPA, Rego, extAuthz, eBPF/BPF-LSM, φ, CapEx/OpEx, RLM, ASK … — is defined in the **[Glossary](../GLOSSARY.md)**.
+
 ---
 
 ## One line
@@ -202,6 +204,6 @@ OIDC**, a **Kubernetes** profile, **GitHub** source-of-truth with **Gitea CI**.
 
 ## Related docs
 
-- [Getting started](../GETTING_STARTED.md) · [Governed-platform architecture](architecture/governed-platform-architecture.md) · [Consolidation plan](architecture/consolidation-plan.md)
+- [Getting started](../GETTING_STARTED.md) · [**Glossary**](../GLOSSARY.md) · [Governed-platform architecture](architecture/governed-platform-architecture.md) · [Consolidation plan](architecture/consolidation-plan.md)
 - [All-spikes target architecture](architecture/target-architecture-all-spikes.md) · [Securing agents with OPA](agent_security_opa.md) · [Audit correlation design](architecture/audit-correlation-design.md)
 - Live proof: [`experiments/cl09-real-policy/`](../experiments/cl09-real-policy/) · [Agentic-Sentry production ops](../../Agentic-Sentry/docs/production.md)
