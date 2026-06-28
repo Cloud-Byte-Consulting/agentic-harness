@@ -7,7 +7,8 @@ every consequential action is admitted or denied by a deterministic policy bundl
 by the model itself.
 
 This guide maps the **pillars**, shows **how they fit**, and points you at **where to
-start**. Each repo's own README links back here.
+start**. Each repo's own README links back here. New to the terminology? Keep the
+**[Glossary](GLOSSARY.md)** open alongside.
 
 ---
 
