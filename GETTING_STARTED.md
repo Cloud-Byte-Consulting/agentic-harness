@@ -20,7 +20,6 @@ start**. Each repo's own README links back here. New to the terminology? Keep th
 | **Policy Gateway** | [Agentic-Sentry](https://github.com/Cloud-Byte-Consulting/Agentic-Sentry) | The MCP data plane: every `tools/call` passes OIDC auth + OPA policy (`mcp_auth.rego`) before execution. Emits the tri-state **allow / deny / require_approval**. |
 | **Token / Cost plane** | [Cachy](https://github.com/Cloud-Byte-Consulting/Cachy) · [teo](https://github.com/Cloud-Byte-Consulting/teo) · [token-dashboard](https://github.com/Cloud-Byte-Consulting/token-dashboard) | Cachy = LLM context-optimization proxy (spend less); teo = token-efficient output format; token-dashboard = cost visibility across tools. |
 | **Docs / Architecture hub** | **agentic-harness** (this repo) | The architecture, the consolidation plan, the governance spikes (CLO-7…11), the cross-plane glue tools, and the content-only `air` CLI. |
-| **Engine prototype (archived)** | [copilot-role-router](https://github.com/Cloud-Byte-Consulting/copilot-role-router) | The original CO role-orchestrator with the code-enforced Judge gate + hill-climb; **ported into omnigent**, kept for reference. |
 
 ---
 
@@ -115,7 +114,6 @@ Index + decision gates: [`docs/architecture/target-architecture-all-spikes.md`](
 | Cachy | Token plane — optimization proxy | [README](https://github.com/Cloud-Byte-Consulting/Cachy) |
 | teo | Token plane — output format | [README](https://github.com/Cloud-Byte-Consulting/teo) |
 | token-dashboard | Token plane — cost visibility | [README](https://github.com/Cloud-Byte-Consulting/token-dashboard) |
-| copilot-role-router | Engine prototype (archived) | [README](https://github.com/Cloud-Byte-Consulting/copilot-role-router) |
 
 > Source of truth is **GitHub** (`Cloud-Byte-Consulting`); a **Gitea** mirror runs CI,
 > packages, and workflows. All CI is Gitea-only.
