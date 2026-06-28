@@ -8,7 +8,7 @@ by the model itself.
 
 This guide maps the **pillars**, shows **how they fit**, and points you at **where to
 start**. Each repo's own README links back here. New to the terminology? Keep the
-**[Glossary](GLOSSARY.md)** open alongside.
+**[Glossary](GLOSSARY.md)** open alongside. Ready to stand it up? → **[INSTALL.md](INSTALL.md)**.
 
 ---
 

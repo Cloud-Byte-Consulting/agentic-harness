@@ -5,7 +5,7 @@ governed agentic platform), plus the runnable **governance spikes**, the cross-p
 tools, and the now **content-only `air` CLI** (pod-bundle, personas, skills, stack docs).
 
 > **New here? Start with [GETTING_STARTED.md](GETTING_STARTED.md)** — the pillars, how they
-> fit, the governance model, and where to begin.
+> fit, the governance model, and where to begin. To stand it up, see **[INSTALL.md](INSTALL.md)**.
 
 ## The platform at a glance
 
