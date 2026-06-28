@@ -24,8 +24,16 @@ verdict := v if {
 	v := auth.verdict with input as _policy_input
 }
 
-# ext_authz is binary: allow ONLY on "allow". `deny` and `require_approval` both block
-# at the gateway; require_approval is then resolved by Omnigent's ASK (per the spike).
-default allow := false
+# Structured ext_authz response so the gateway returns the full tri-state, not just
+# allow/deny: allow -> forward (200), deny -> 403, require_approval -> 428 (which
+# Omnigent resolves via its ASK flow; the x-mcp-verdict header carries the reason).
+default response := {"allowed": false, "http_status": 403, "headers": {"x-mcp-verdict": "deny"}}
 
-allow if verdict == "allow"
+response := {"allowed": true} if verdict == "allow"
+
+response := {
+	"allowed": false,
+	"http_status": 428,
+	"headers": {"x-mcp-verdict": "require_approval"},
+	"body": "Tool requires human approval (Open Engine boundary).",
+} if verdict == "require_approval"

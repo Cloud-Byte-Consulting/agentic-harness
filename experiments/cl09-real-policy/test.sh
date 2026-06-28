@@ -13,4 +13,4 @@ printf "%-22s %-12s %s\n" tool gateway "our-verdict"
 for t in get_repo delete_repository get_email; do
   printf "%-22s %-12s %s\n" "$t" "$(hit "$t")" "$(ver "$t")"
 done
-echo "expect: get_repo 200/allow · delete_repository 403/deny · get_email 403/require_approval"
+echo "expect: get_repo 200/allow · delete_repository 403/deny · get_email 428/require_approval"
