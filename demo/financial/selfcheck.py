@@ -8,7 +8,14 @@ tools/oe_correlate.py --self-check. If you change the .rego, change this in lock
 Run:  python3 selfcheck.py        # prints the verdict table; exits non-zero on any mismatch
 """
 from __future__ import annotations
-import sys
+import json, os, uuid
+from datetime import datetime, timezone
+
+# Where decisions are recorded. In production this is OPA's decision log shipped to a sink;
+# offline the demo appends one JSON record per call to this append-only file (override with env).
+AUDIT_LOG = os.environ.get("OE_AUDIT_LOG", "decisions.jsonl")
+POLICY_PATH = "data.financial.auth.verdict"
+SERVER_NAME = "member-assistant"
 
 READ_PREFIXES = ("get_", "list_", "search_", "read_", "view_")
 SENSITIVE = ("pii", "ssn", "account", "balance", "member_data", "statement", "card")
@@ -35,7 +42,7 @@ def decide(tool_name: str) -> tuple[str, str]:
         return "require_approval", "read of confidential member data"
     if is_read:
         return "allow", "read-prefix, no confidential data"
-    return "deny", "secure default — no rule matched"
+    return "deny", "secure default - no rule matched"
 
 
 def verdict(tool_name: str) -> str:
@@ -69,11 +76,30 @@ def main() -> int:
     return 0
 
 
+def audit(tool_name: str, verdict_: str, action: str, code: int, reason: str) -> dict:
+    """Append one decision record (OPA decision-log shape) to the append-only audit log."""
+    rec = {
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "decision_id": str(uuid.uuid4()),
+        "path": POLICY_PATH,
+        "input": {"server_name": SERVER_NAME, "tool_name": tool_name, "groups": []},
+        "result": verdict_,
+        "action": action,
+        "http_status": code,
+        "reason": reason,
+    }
+    with open(AUDIT_LOG, "a") as f:
+        f.write(json.dumps(rec) + "\n")
+    return rec
+
+
 def call(tool_name: str) -> int:
-    """Answer one MCP tool call the way the gateway would: verdict -> HTTP action."""
+    """Answer one MCP tool call the way the gateway would, and write an audit record."""
     v, why = decide(tool_name)
     action, code = ACTION[v]
-    print(f"call {tool_name}\n  -> {v}   HTTP {code} {action}   ({why})\n")
+    rec = audit(tool_name, v, action, code, why)
+    print(f"call {tool_name}\n  -> {v}   HTTP {code} {action}   ({why})")
+    print(f"  audit: {rec['decision_id']} -> {AUDIT_LOG}\n")
     return 0 if v == "allow" else code
 
 
