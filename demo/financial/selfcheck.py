@@ -17,21 +17,29 @@ DENY = ("delete", "transfer", "move_funds", "wire", "pay", "close",
         "write", "update", "create", "merge")
 
 
-def verdict(tool_name: str) -> str:
-    """Deterministic tri-state decision. Precedence: deny > require_approval > allow > deny."""
+# verdict -> (gateway action, HTTP status) the orchestrator maps it to.
+ACTION = {"allow": ("forward", 200), "require_approval": ("HUMAN APPROVAL (ASK)", 428), "deny": ("BLOCK", 403)}
+
+
+def decide(tool_name: str) -> tuple[str, str]:
+    """Deterministic tri-state decision + reason. Precedence: deny > require_approval > allow > deny."""
     n = tool_name.lower()
     has = lambda toks: any(t in n for t in toks)
     is_read = n.startswith(READ_PREFIXES)
 
     if has(DENY):
-        return "deny"
+        return "deny", "consequential / destructive boundary"
     if has(EGRESS):
-        return "require_approval"
+        return "require_approval", "possible data egress"
     if is_read and has(SENSITIVE):
-        return "require_approval"
-    if is_read and not has(SENSITIVE):
-        return "allow"
-    return "deny"  # secure default
+        return "require_approval", "read of confidential member data"
+    if is_read:
+        return "allow", "read-prefix, no confidential data"
+    return "deny", "secure default — no rule matched"
+
+
+def verdict(tool_name: str) -> str:
+    return decide(tool_name)[0]
 
 
 # (tool, expected_verdict, control rationale shown in the table)
@@ -61,5 +69,19 @@ def main() -> int:
     return 0
 
 
+def call(tool_name: str) -> int:
+    """Answer one MCP tool call the way the gateway would: verdict -> HTTP action."""
+    v, why = decide(tool_name)
+    action, code = ACTION[v]
+    print(f"call {tool_name}\n  -> {v}   HTTP {code} {action}   ({why})\n")
+    return 0 if v == "allow" else code
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+    if len(sys.argv) > 1:                       # `selfcheck.py <tool> ...` -> per-call gateway verdict
+        rc = 0
+        for t in sys.argv[1:]:
+            rc = call(t) or rc
+        raise SystemExit(0)                      # demo path: non-zero codes are verdicts, not failures
+    raise SystemExit(main())                     # no args -> verdict table (used by test.sh / CI)
