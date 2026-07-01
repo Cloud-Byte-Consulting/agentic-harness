@@ -52,8 +52,10 @@ audit trail is visible offline. `tail -1 decisions.jsonl | python3 -m json.tool`
 - `inputs/*.json` — one MCP-call input per tool. These carry the subset the policy actually
   reads (`server_name`, `tool_name`, `groups`); the production Envoy adapter also sends
   `arguments` and `session` (see `experiments/cl09-real-policy/envoy-adapter.rego`).
-- `selfcheck.py` — stdlib mirror of the Rego; prints the verdict table, exits non-zero on mismatch.
-- `test.sh` — evaluates via `opa eval` when available, else runs `selfcheck.py`.
+- `selfcheck.py` — thin config over the shared `../common/policy_engine.py` (stdlib mirror of
+  the Rego); prints the verdict table, exits non-zero on mismatch.
+- `test.sh` — evaluates via `opa eval` when available (asserting against `selfcheck.py --expect`),
+  else runs `selfcheck.py`.
 - `CONTROL_MAPPING.md` — each verdict → the control objective it satisfies.
 - `decisions.jsonl` — local audit log written at runtime (gitignored; see the Audit note above).
 

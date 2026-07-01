@@ -1,87 +1,55 @@
 #!/usr/bin/env python3
 """Offline self-check for the financial tri-state policy.
 
-Mirrors financial_auth.rego exactly, in the standard library only, so the demo's verdicts
-can be proven with zero dependencies (no OPA, no Docker) — the same pattern as
-tools/oe_correlate.py --self-check. If you change the .rego, change this in lockstep.
+Configuration only: the decision logic, action map, verdict table, per-call gateway simulator,
+and audit writer all live in ../common/policy_engine.py (shared with the other demo slices, so
+they cannot drift). This file supplies the financial token lists, reasons, and expected cases —
+the stdlib mirror of financial_auth.rego. If you change the token lists or precedence here,
+change financial_auth.rego in lockstep; test.sh cross-checks the two when the `opa` binary is present.
 
 Run:  python3 selfcheck.py        # prints the verdict table; exits non-zero on any mismatch
+      python3 selfcheck.py <tool>  # per-call gateway verdict + audit record
 """
 from __future__ import annotations
+
+import os
 import sys
 
-READ_PREFIXES = ("get_", "list_", "search_", "read_", "view_")
-SENSITIVE = ("pii", "ssn", "account", "balance", "member_data", "statement", "card")
-EGRESS = ("send", "email", "share", "export", "message", "post", "external")
-DENY = ("delete", "transfer", "move_funds", "wire", "pay", "close",
-        "write", "update", "create", "merge")
+# Import the shared engine from the sibling demo/common/ directory (CWD-independent).
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "common"))
+from policy_engine import Policy, run_cli  # noqa: E402
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
-# verdict -> (gateway action, HTTP status) the orchestrator maps it to.
-ACTION = {"allow": ("forward", 200), "require_approval": ("HUMAN APPROVAL (ASK)", 428), "deny": ("BLOCK", 403)}
-
-
-def decide(tool_name: str) -> tuple[str, str]:
-    """Deterministic tri-state decision + reason. Precedence: deny > require_approval > allow > deny."""
-    n = tool_name.lower()
-    has = lambda toks: any(t in n for t in toks)
-    is_read = n.startswith(READ_PREFIXES)
-
-    if has(DENY):
-        return "deny", "consequential / destructive boundary"
-    if has(EGRESS):
-        return "require_approval", "possible data egress"
-    if is_read and has(SENSITIVE):
-        return "require_approval", "read of confidential member data"
-    if is_read:
-        return "allow", "read-prefix, no confidential data"
-    return "deny", "secure default — no rule matched"
-
-
-def verdict(tool_name: str) -> str:
-    return decide(tool_name)[0]
-
-
-# (tool, expected_verdict, control rationale shown in the table)
-CASES = [
-    ("read_education_content", "allow",            "read-prefix, no confidential data"),
-    ("get_member_account",     "require_approval", "read of confidential member data"),
-    ("send_external_message",  "require_approval", "possible data egress"),
-    ("transfer_funds",         "deny",             "consequential / destructive boundary"),
-]
-
-
-def main() -> int:
-    print(f"{'tool':<24}{'verdict':<18}{'why'}")
-    print("-" * 72)
-    failures = 0
-    for tool, expected, why in CASES:
-        got = verdict(tool)
-        ok = got == expected
-        failures += not ok
-        flag = "" if ok else f"  <-- MISMATCH (expected {expected})"
-        print(f"{tool:<24}{got:<18}{why}{flag}")
-    print("-" * 72)
-    if failures:
-        print(f"FAIL: {failures} verdict mismatch(es).")
-        return 1
-    print("PASS: all financial-policy verdicts correct.")
-    return 0
-
-
-def call(tool_name: str) -> int:
-    """Answer one MCP tool call the way the gateway would: verdict -> HTTP action."""
-    v, why = decide(tool_name)
-    action, code = ACTION[v]
-    print(f"call {tool_name}\n  -> {v}   HTTP {code} {action}   ({why})\n")
-    return 0 if v == "allow" else code
+POLICY = Policy(
+    name="financial",
+    server_name="member-assistant",
+    # Tokens that make a READ touch confidential member data -> human gate (declassification).
+    sensitive=("pii", "ssn", "account", "balance", "member_data", "statement", "card"),
+    # Tokens that move data OUT of the institution (egress) -> human gate.
+    egress=("send", "email", "share", "export", "message", "post", "external"),
+    # Consequential / destructive tokens -> hard deny (segregation-of-duties boundary).
+    deny=("delete", "transfer", "move_funds", "wire", "pay", "close",
+          "write", "update", "create", "merge"),
+    reasons={
+        "deny": "consequential / destructive boundary",
+        "egress": "possible data egress",
+        "sensitive_read": "read of confidential member data",
+        "read": "read-prefix, no confidential data",
+        "default": "secure default - no rule matched",
+    },
+    cases=(
+        ("read_education_content", "allow"),
+        ("get_member_account", "require_approval"),
+        ("send_external_message", "require_approval"),
+        ("transfer_funds", "deny"),
+    ),
+    # Decisions land next to this script (stable regardless of CWD, and covered by .gitignore).
+    # The durable, tamper-evident trail is OPA's decision log shipped to a sink in production;
+    # this local file is a visibility aid only — it is not itself append-only.
+    audit_log=os.environ.get("OE_AUDIT_LOG", os.path.join(_HERE, "decisions.jsonl")),
+)
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:                       # `selfcheck.py <tool> ...` -> per-call gateway verdict
-        rc = 0
-        for t in sys.argv[1:]:
-            rc = call(t) or rc
-        raise SystemExit(0)                      # demo path: non-zero codes are verdicts, not failures
-    raise SystemExit(main())                     # no args -> verdict table (used by test.sh / CI)
+    run_cli(POLICY, sys.argv)

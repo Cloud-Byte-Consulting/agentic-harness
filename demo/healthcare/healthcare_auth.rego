@@ -28,14 +28,15 @@ deny_tokens := ["delete", "discharge", "administer", "prescribe", "order", "canc
 
 _name := lower(input.tool_name)
 
-# Tokens match whole underscore-delimited segments of the tool name, not raw substrings, so
-# "order" does not fire on "search_disorder_guidelines" and "lab" does not fire on
-# "list_available_appointments". selfcheck.py uses the identical segment match.
-_segments := split(_name, "_")
+# Match tokens on underscore boundaries, not as raw substrings: wrap the name and each token in
+# underscores so a token matches only a whole underscore-delimited run (multi-word tokens too).
+# So "order" does not fire on "search_disorder_guidelines" and "lab" does not fire on
+# "list_available_appointments". ../common/policy_engine.py uses the identical padded match.
+_padded := concat("", ["_", _name, "_"])
 
 _has(tokens) if {
 	some t in tokens
-	t in _segments
+	contains(_padded, concat("", ["_", t, "_"]))
 }
 
 _is_read if {

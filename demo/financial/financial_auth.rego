@@ -28,9 +28,15 @@ deny_tokens := ["delete", "transfer", "move_funds", "wire", "pay", "close", "wri
 
 _name := lower(input.tool_name)
 
+# Match tokens on underscore boundaries, not as raw substrings: wrap the name and each token in
+# underscores so a token matches only a whole underscore-delimited run (multi-word tokens too).
+# So "pay" does not fire on "get_payment_history" and "close" does not fire on "disclosure".
+# ../common/policy_engine.py uses the identical padded match.
+_padded := concat("", ["_", _name, "_"])
+
 _has(tokens) if {
 	some t in tokens
-	contains(_name, t)
+	contains(_padded, concat("", ["_", t, "_"]))
 }
 
 _is_read if {

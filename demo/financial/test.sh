@@ -8,14 +8,30 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 if command -v opa >/dev/null 2>&1; then
-  printf "%-24s %s\n" "tool" "verdict (via opa eval)"
-  printf -- "------------------------------------------------\n"
-  for f in inputs/*.json; do
-    tool=$(basename "$f" .json)
-    v=$(opa eval -d financial_auth.rego -i "$f" 'data.financial.auth.verdict' --format raw 2>/dev/null || echo "?")
-    printf "%-24s %s\n" "$tool" "$v"
-  done
-  echo "expect: read_education_content/allow · get_member_account/require_approval · send_external_message/require_approval · transfer_funds/deny"
+  printf "%-24s %-18s %-18s %s\n" "tool" "verdict (opa)" "expected" "result"
+  printf -- "----------------------------------------------------------------------\n"
+  fail=0
+  # Expected verdicts come from selfcheck.py's CASES — the single source of truth — so this
+  # path actually ASSERTS the real Rego instead of just printing it. Any eval error or verdict
+  # that disagrees with the expectation fails the script (exit 1), catching Rego↔Python drift.
+  while read -r tool expected; do
+    f="inputs/${tool}.json"
+    if ! v=$(opa eval -d financial_auth.rego -i "$f" 'data.financial.auth.verdict' --format raw); then
+      v="ERROR"
+    fi
+    if [ "$v" = "$expected" ]; then
+      mark="ok"
+    else
+      mark="MISMATCH"
+      fail=1
+    fi
+    printf "%-24s %-18s %-18s %s\n" "$tool" "$v" "$expected" "$mark"
+  done < <(python3 selfcheck.py --expect)
+  if [ "$fail" -ne 0 ]; then
+    echo "FAIL: opa verdicts disagree with expected (Rego and selfcheck.py have drifted)."
+    exit 1
+  fi
+  echo "PASS: all opa verdicts match expected."
 else
   echo "opa not found — running the stdlib self-check instead:"
   exec python3 selfcheck.py
