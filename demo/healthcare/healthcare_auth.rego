@@ -28,9 +28,14 @@ deny_tokens := ["delete", "discharge", "administer", "prescribe", "order", "canc
 
 _name := lower(input.tool_name)
 
+# Tokens match whole underscore-delimited segments of the tool name, not raw substrings, so
+# "order" does not fire on "search_disorder_guidelines" and "lab" does not fire on
+# "list_available_appointments". selfcheck.py uses the identical segment match.
+_segments := split(_name, "_")
+
 _has(tokens) if {
 	some t in tokens
-	contains(_name, t)
+	t in _segments
 }
 
 _is_read if {

@@ -2,7 +2,12 @@
 
 Each policy verdict maps to a recognized control objective. The point for a hospital or
 covered entity: these are **deterministic** controls enforced *before* a tool runs,
-independent of the model — so a mistaken or prompt-injected model cannot cross them.
+independent of the model — so for a given tool, a mistaken or prompt-injected model cannot
+change the verdict. Note the boundary this demo enforces is over the **tool name**, not the
+call's arguments: it holds only for a vetted tool catalog whose names honestly reflect
+behavior. A tool named `read_notes` that returns PHI would be classed as a low-risk read, so
+name hygiene (and, in production, argument-aware policy) is part of the control, not an
+afterthought.
 
 | Clinical-assistant tool   | Verdict            | Control objective                            | Maps to (illustrative) |
 | ------------------------- | ------------------ | -------------------------------------------- | ---------------------- |
@@ -19,9 +24,13 @@ independent of the model — so a mistaken or prompt-injected model cannot cross
 - **Tri-state, not blanket block.** `require_approval` preserves autonomy for safe work while
   routing PHI access, disclosures, and consequential clinical actions to a human (the 428 / ASK flow).
 - **Fail-closed.** Unknown tool, unreachable policy, or unmatched input → deny.
-- **One policy, many enforcement points.** The same bundle is enforced at the MCP gateway
-  (agentgateway/Sentry) and as a PreToolUse gate inside editors (Claude Code, Copilot) via
-  `tools/opa_hook.py`.
+- **One policy, many enforcement points.** In production the *same* bundle is enforced at the
+  MCP gateway (agentgateway/Sentry) and as a PreToolUse gate inside editors (Claude Code,
+  Copilot) via `tools/opa_hook.py`. That hook queries `data.mcp.auth.oe_decision` — an object
+  carrying `verdict` — so to be consumed by it directly, this demo policy's `healthcare.auth`
+  package and bare-string `verdict` rule would need to match that `mcp.auth.oe_decision` shape.
+  This slice illustrates the verdict contract for readability; it is not loadable by
+  `opa_hook.py` unmodified.
 - **Auditable.** Every verdict is logged and correlated (authz + runtime + cost) into one trace
   per task via `tools/oe_correlate.py`.
 

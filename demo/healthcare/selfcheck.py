@@ -3,7 +3,9 @@
 
 Mirrors healthcare_auth.rego exactly, in the standard library only, so the demo's verdicts
 can be proven with zero dependencies (no OPA, no Docker) — the same pattern as
-tools/oe_correlate.py --self-check. If you change the .rego, change this in lockstep.
+tools/oe_correlate.py --self-check. If you change the token lists or precedence here, change
+healthcare_auth.rego in lockstep; `test.sh` cross-checks the two against these expectations
+when the `opa` binary is present.
 
 Run:  python3 selfcheck.py        # prints the verdict table; exits non-zero on any mismatch
 """
@@ -11,9 +13,12 @@ from __future__ import annotations
 import json, os, uuid
 from datetime import datetime, timezone
 
-# Where decisions are recorded. In production this is OPA's decision log shipped to a sink;
-# offline the demo appends one JSON record per call to this append-only file (override with env).
-AUDIT_LOG = os.environ.get("OE_AUDIT_LOG", "decisions.jsonl")
+# Where decisions are recorded. Default next to this script so the path is stable regardless of
+# the caller's CWD (and stays covered by demo/healthcare/.gitignore). In production the durable,
+# tamper-evident audit trail is OPA's decision log shipped to a sink; this local file is a
+# visibility aid only — it is not itself append-only (any process can rewrite it).
+_HERE = os.path.dirname(os.path.abspath(__file__))
+AUDIT_LOG = os.environ.get("OE_AUDIT_LOG", os.path.join(_HERE, "decisions.jsonl"))
 POLICY_PATH = "data.healthcare.auth.verdict"
 SERVER_NAME = "clinical-assistant"
 
@@ -31,9 +36,15 @@ ACTION = {"allow": ("forward", 200), "require_approval": ("HUMAN APPROVAL (ASK)"
 
 
 def decide(tool_name: str) -> tuple[str, str]:
-    """Deterministic tri-state decision + reason. Precedence: deny > require_approval > allow > deny."""
+    """Deterministic tri-state decision + reason. Precedence: deny > require_approval > allow > deny.
+
+    Tokens match whole underscore-delimited segments of the tool name, not raw substrings, so
+    "order" does not fire on "search_disorder_guidelines" and "lab" does not fire on
+    "list_available_appointments". healthcare_auth.rego uses the identical segment match.
+    """
     n = tool_name.lower()
-    has = lambda toks: any(t in n for t in toks)
+    segments = set(n.split("_"))
+    has = lambda toks: any(t in segments for t in toks)
     is_read = n.startswith(READ_PREFIXES)
 
     if has(DENY):
@@ -47,16 +58,13 @@ def decide(tool_name: str) -> tuple[str, str]:
     return "deny", "secure default - no rule matched"
 
 
-def verdict(tool_name: str) -> str:
-    return decide(tool_name)[0]
-
-
-# (tool, expected_verdict, control rationale shown in the table)
+# (tool, expected_verdict). The rationale shown in the table comes from decide() itself, so the
+# reason strings live in exactly one place and cannot drift from what call()/the audit log emit.
 CASES = [
-    ("read_care_guidelines", "allow",            "read-prefix, no PHI"),
-    ("get_patient_record",   "require_approval", "read of protected health information"),
-    ("send_referral_fax",    "require_approval", "PHI disclosure outside the covered entity"),
-    ("order_medication",     "deny",             "consequential clinical action"),
+    ("read_care_guidelines", "allow"),
+    ("get_patient_record",   "require_approval"),
+    ("send_referral_fax",    "require_approval"),
+    ("order_medication",     "deny"),
 ]
 
 
@@ -64,8 +72,8 @@ def main() -> int:
     print(f"{'tool':<24}{'verdict':<18}{'why'}")
     print("-" * 72)
     failures = 0
-    for tool, expected, why in CASES:
-        got = verdict(tool)
+    for tool, expected in CASES:
+        got, why = decide(tool)
         ok = got == expected
         failures += not ok
         flag = "" if ok else f"  <-- MISMATCH (expected {expected})"
@@ -79,7 +87,7 @@ def main() -> int:
 
 
 def audit(tool_name: str, verdict_: str, action: str, code: int, reason: str) -> dict:
-    """Append one decision record (OPA decision-log shape) to the append-only audit log."""
+    """Append one decision record (OPA decision-log shape) to the local audit log."""
     rec = {
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "decision_id": str(uuid.uuid4()),
@@ -107,8 +115,12 @@ def call(tool_name: str) -> int:
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1:                       # `selfcheck.py <tool> ...` -> per-call gateway verdict
-        for t in sys.argv[1:]:
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--expect":            # `selfcheck.py --expect` -> `tool expected` lines
+            for tool, expected in CASES:         # single source of truth for test.sh's opa assertions
+                print(f"{tool} {expected}")
+            raise SystemExit(0)
+        for t in sys.argv[1:]:                   # `selfcheck.py <tool> ...` -> per-call gateway verdict
             call(t)
         raise SystemExit(0)                      # demo path: non-zero codes are verdicts, not failures
     raise SystemExit(main())                     # no args -> verdict table (used by test.sh / CI)

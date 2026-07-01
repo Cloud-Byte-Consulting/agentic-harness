@@ -31,9 +31,11 @@ python3 selfcheck.py order_medication
 ```
 
 ## Audit
-Every call appends a decision record to an append-only log — `decisions.jsonl` by default
-(override with `OE_AUDIT_LOG`). The record mirrors OPA's decision-log shape, so it's the
-exact artifact a risk/compliance reviewer reads:
+Every call appends a decision record to a local log — `decisions.jsonl` next to this script by
+default (override with `OE_AUDIT_LOG`). The record mirrors OPA's decision-log shape, so it's the
+same *shape* of artifact a risk/compliance reviewer reads. The tamper-evident, append-only
+guarantee is a property of the production decision-log sink, not of this local file — here the
+file is a visibility aid you can read offline, and any process can rewrite it:
 
 ```json
 {"timestamp":"…Z","decision_id":"…","path":"data.healthcare.auth.verdict",
@@ -47,17 +49,30 @@ audit trail is visible offline. `tail -1 decisions.jsonl | python3 -m json.tool`
 
 ## Files
 - `healthcare_auth.rego` — the tri-state policy (`package healthcare.auth`).
-- `inputs/*.json` — one MCP-call input per tool (production input shape).
+- `inputs/*.json` — one MCP-call input per tool. These carry the subset the policy actually
+  reads (`server_name`, `tool_name`, `groups`); the production Envoy adapter also sends
+  `arguments` and `session` (see `experiments/cl09-real-policy/envoy-adapter.rego`).
 - `selfcheck.py` — stdlib mirror of the Rego; prints the verdict table, exits non-zero on mismatch.
 - `test.sh` — evaluates via `opa eval` when available, else runs `selfcheck.py`.
 - `CONTROL_MAPPING.md` — each verdict → the control objective it satisfies.
-- `decisions.jsonl` — append-only audit log written at runtime (gitignored).
+- `decisions.jsonl` — local audit log written at runtime (gitignored; see the Audit note above).
 
 ## How it slots into the live demo
-Mount `healthcare_auth.rego` in the `cl09-real-policy` OPA container (alongside or instead of
-`mcp_auth.rego`) and point the Envoy adapter's `_policy_input.server_name` at
-`clinical-assistant`. The gateway then returns 200 / 403 / 428 for these clinical tools the
-same way it does for the GitHub tools today.
+This slice uses `package healthcare.auth`, but the `cl09-real-policy` Envoy adapter imports
+`data.mcp.auth` and queries `auth.verdict` (see `experiments/cl09-real-policy/envoy-adapter.rego`),
+and its `docker-compose.yml` loads `mcp_auth.rego` by explicit path. So dropping this file into
+that container unchanged does nothing — the adapter never queries `healthcare.auth`, and
+`_policy_input.server_name` only feeds allow-list lookups inside the policy; it does not select
+which package is evaluated. To run these clinical verdicts through that container, do **one** of:
+
+- rename this file's package to `mcp.auth` and mount it in place of `mcp_auth.rego` — replace the
+  `/policies/mcp_auth.rego` volume and its `opa run` argument in `docker-compose.yml`; or
+- repoint the adapter's `import data.mcp.auth` / `auth.verdict` at `data.healthcare.auth` and add
+  this file to the adapter container's `opa run` argument list.
+
+The verdict *shape* is identical to `mcp_auth`, which is what makes either swap mechanical; the
+gateway then returns 200 / 403 / 428 for these clinical tools the same way it does for the GitHub
+tools today.
 
 > Demo artifact. The hospital framing is a presentation layer over the real tri-state shape;
 > production groups come from a verified JWT, not the empty set used here.
