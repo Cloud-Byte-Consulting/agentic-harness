@@ -41,8 +41,9 @@ Both call the same OPA sidecar / bundle as Sentry. One policy, multiple enforcem
 | Host | Hook mechanism | Notes |
 | :--- | :--- | :--- |
 | Omnigent-wrapped sessions | PreToolUse → policies/evaluate | Primary path |
-| Claude Code / Copilot | PreToolUse via hook config | `opa-hook` |
-| Antigravity (Gemini CLI) | `PreToolUse` in `hooks.json` (platform) vs Gemini CLI `BeforeTool` in `settings.json` | **Re-verify agy 2.0** — PreToolUse did not fire on agy 1.0.8 in Omnigent audit |
+| Claude Code / Codex / Copilot CLI | `PreToolUse` via hook config (`hookSpecificOutput.permissionDecision`) | `opa-hook --format claude` (default). Copilot CLI adopted this contract in v1.0.6; verified against current upstream docs — see [agent-integration-copilot-cli.md](agent-integration-copilot-cli.md). |
+| Gemini CLI (used directly) | `BeforeTool` in `settings.json`; binary `{"decision": allow\|deny}`, **no `ask`** | `opa-hook --format gemini`, `require_approval → deny` (fail-safe). Shipped v0.26.0. See [agent-integration-gemini-cli.md](agent-integration-gemini-cli.md). |
+| Antigravity | `PreToolUse` in `hooks.json` (platform) | **Re-verify agy 2.0** — PreToolUse did not fire on agy 1.0.8 in Omnigent audit; treat as MCP-only until verified. |
 | MCP-only clients | Sentry gateway only | No native tools |
 
 Reference: `omnigent/omnigent/native_policy_hook.py`, `omnigent/omnigent/antigravity_native_audit.py`, Agentic-Sentry `cmd/gateway/main.go` (`queryOPA`).
