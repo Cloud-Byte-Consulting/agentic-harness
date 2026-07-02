@@ -1,0 +1,69 @@
+# opa-hook backend for minikube — OPA server exposing the real mcp_auth.rego's
+# oe_decision rule, which tools/opa_hook.py queries. Deploy with
+# ../minikube/deploy.sh, not `kubectl apply -f` directly: the ConfigMap this
+# depends on (opa-mcp-policies) is generated at deploy time from the live
+# Agentic-Sentry policy file, not checked in here, so it can't drift.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa-hook-backend
+  labels:
+    app: opa-hook-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opa-hook-backend
+  template:
+    metadata:
+      labels:
+        app: opa-hook-backend
+    spec:
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:latest
+          # Load the specific file, not the /policies mount directory: a
+          # ConfigMap volume is really a symlink tree (..data/, a timestamped
+          # snapshot dir, and the file itself all resolve to the same
+          # content), and OPA's directory walk picks up all of those paths as
+          # separate copies of the same package -> "multiple default rules"
+          # load error. Pointing at the file directly sidesteps the walk.
+          args:
+            - "run"
+            - "--server"
+            - "--addr=0.0.0.0:8181"
+            - "--set=decision_logs.console=true"
+            - "/policies/mcp_auth.rego"
+          ports:
+            - containerPort: 8181
+          volumeMounts:
+            - name: mcp-policies
+              mountPath: /policies
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8181
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8181
+            initialDelaySeconds: 5
+            periodSeconds: 15
+      volumes:
+        - name: mcp-policies
+          configMap:
+            name: opa-mcp-policies
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa-hook-backend
+spec:
+  selector:
+    app: opa-hook-backend
+  ports:
+    - port: 8181
+      targetPort: 8181

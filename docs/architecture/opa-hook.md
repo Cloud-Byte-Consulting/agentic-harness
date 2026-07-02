@@ -14,10 +14,18 @@ Two output wire formats are supported (`--format claude|gemini`, default
 Gemini CLI uses a different event name and a binary (no `ask`) decision shape —
 see the per-CLI docs linked below for exact configs and version floors.
 
+> **Guided setup:** paste [opa-hook-setup-prompt.md](./opa-hook-setup-prompt.md)
+> into a fresh agent session to be walked through detection, wiring, and
+> shadow-then-enforce verification for whichever CLIs you have installed.
+> Quick copy-paste reference (no walkthrough):
+> [opa-hook-setup.md](../open-engine/templates/opa-hook-setup.md).
+
 ## Prerequisites
 
-- **OPA running with the bundle** so `oe_decision` is queryable, e.g.:
-  `opa run --server Agentic-Sentry/mcp-policies/` (default `:8181`).
+- **OPA running with the bundle** so `oe_decision` is queryable — either
+  directly (`opa run --server Agentic-Sentry/mcp-policies/`, default `:8181`),
+  or containerized via [deploy/opa-hook/](../../deploy/opa-hook/) (Docker or
+  minikube, the only two containerized targets this repo automates).
 - Env:
   - `OMNIGENT_OPA_URL` — OPA base URL (default `http://127.0.0.1:8181`).
   - `OMNIGENT_OPA_DELEGATE_MODE` — `off` (default) / `shadow` / `enforce` (shared
